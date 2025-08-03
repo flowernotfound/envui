@@ -1,4 +1,5 @@
 import Table from 'cli-table3';
+import type { EnvironmentData } from '../types/environment.js';
 
 /**
  * Creates a formatted table for environment variables
@@ -6,7 +7,7 @@ import Table from 'cli-table3';
  * @returns Formatted table string
  * @throws Error if table creation fails
  */
-export function createEnvironmentTable(data: Array<{ key: string; value: string }> = []): string {
+export function createEnvironmentTable(data: EnvironmentData[] = []): string {
   try {
     const table = new Table({
       head: ['KEY', 'VALUE'],

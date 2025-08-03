@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-  generateDummyEnvironmentData,
-  type EnvironmentData,
-} from '../../../src/utils/dummyData.js';
+import { generateDummyEnvironmentData } from '../../../src/utils/dummyData.js';
+import type { EnvironmentData } from '../../../src/types/environment.js';
 
 describe('generateDummyEnvironmentData', () => {
   it('should return array of dummy environment data', () => {
