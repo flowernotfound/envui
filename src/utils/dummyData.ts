@@ -1,10 +1,4 @@
-/**
- * Environment variable data structure
- */
-export interface EnvironmentData {
-  key: string;
-  value: string;
-}
+import type { EnvironmentData } from '../types/environment.js';
 
 /**
  * Generates dummy environment data for development and testing purposes

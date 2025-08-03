@@ -43,14 +43,29 @@ pnpm dev
 # Run tests
 pnpm test
 
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage
+pnpm test:coverage
+
 # Type checking
 pnpm typecheck
 
 # Lint code
 pnpm lint
 
+# Fix lint issues automatically
+pnpm lint:fix
+
 # Format code
 pnpm format
+
+# Check code formatting
+pnpm format:check
+
+# Clean build artifacts
+pnpm clean
 ```
 
 ## License
