@@ -1,10 +1,12 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { readEnvironmentVariables } from '../../../src/core/env-reader.js';
+import { logger } from '../../../src/utils/logger.js';
 
 describe('readEnvironmentVariables', () => {
   afterEach(() => {
     // Restore environment after each test
     vi.unstubAllEnvs();
+    vi.clearAllMocks();
   });
 
   it('should return an array containing environment variables', () => {
@@ -92,5 +94,53 @@ describe('readEnvironmentVariables', () => {
     const result = readEnvironmentVariables();
 
     expect(result).toContainEqual({ key: 'PATH', value: pathValue });
+  });
+
+  describe('Error handling', () => {
+    it('should log and re-throw errors when process.env access fails', () => {
+      // Mock console methods to capture log output
+      const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+
+      // Mock Object.entries to throw an error
+      const originalEntries = Object.entries;
+      vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+        throw new Error('Mock environment access error');
+      });
+
+      expect(() => readEnvironmentVariables()).toThrow(
+        'Environment variable reading failed: Mock environment access error',
+      );
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to read environment variables: Mock environment access error',
+      );
+
+      // Restore Object.entries
+      Object.entries = originalEntries;
+      errorSpy.mockRestore();
+    });
+
+    it('should handle unknown error types properly', () => {
+      const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+
+      // Mock Object.entries to throw a non-Error object
+      const originalEntries = Object.entries;
+      vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+        // eslint-disable-next-line @typescript-eslint/no-throw-literal
+        throw 'String error';
+      });
+
+      expect(() => readEnvironmentVariables()).toThrow(
+        'Environment variable reading failed: Unknown error occurred',
+      );
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to read environment variables: Unknown error occurred',
+      );
+
+      // Restore Object.entries
+      Object.entries = originalEntries;
+      errorSpy.mockRestore();
+    });
   });
 });

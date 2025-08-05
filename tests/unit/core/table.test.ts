@@ -1,22 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { createEnvironmentTable } from '../../../src/core/table.js';
-
-// Helper function to check if a key exists in table (may be wrapped across lines)
-function tableContainsKey(table: string, key: string): boolean {
-  // Remove ANSI codes and check if all characters of the key exist in sequence
-  // eslint-disable-next-line no-control-regex
-  const cleanTable = table.replace(/\x1b\[[0-9;]*m/g, '');
-  const keyChars = key.split('');
-  let lastIndex = 0;
-
-  for (const char of keyChars) {
-    const index = cleanTable.indexOf(char, lastIndex);
-    if (index === -1) return false;
-    lastIndex = index + 1;
-  }
-
-  return true;
-}
+import { tableContainsKey } from '../../utils/tableTestHelpers.js';
 
 describe('createEnvironmentTable', () => {
   it('should create an empty table with headers', () => {
@@ -89,7 +73,7 @@ describe('createEnvironmentTable - Layout', () => {
     if (originalColumns !== undefined) {
       process.stdout.columns = originalColumns;
     } else {
-      delete (process.stdout as any).columns;
+      delete (process.stdout as { columns?: number }).columns;
     }
   });
 
@@ -182,7 +166,7 @@ describe('createEnvironmentTable - Layout', () => {
   });
 
   it('should use default width when columns is undefined', () => {
-    delete (process.stdout as any).columns;
+    delete (process.stdout as { columns?: number }).columns;
 
     const data = [{ key: 'DEFAULT_TEST', value: 'value' }];
 
