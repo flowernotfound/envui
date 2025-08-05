@@ -9,8 +9,17 @@ import type { EnvironmentData } from '../types/environment.js';
  */
 export function createEnvironmentTable(data: EnvironmentData[] = []): string {
   try {
+    const terminalWidth = process.stdout.columns || 80;
+
+    // (KEY:VALUE = 25:75)
+    const keyWidth = Math.floor(terminalWidth * 0.25);
+    // Subtract 7 for table borders and padding
+    const valueWidth = terminalWidth - keyWidth - 7;
+
     const table = new Table({
       head: ['KEY', 'VALUE'],
+      colWidths: [keyWidth, valueWidth],
+      wordWrap: true,
     });
 
     data.forEach((item) => {
