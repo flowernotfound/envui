@@ -2,38 +2,56 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { readEnvironmentVariables } from '../../../src/core/env-reader.js';
 import { logger } from '../../../src/utils/logger.js';
 
-describe('readEnvironmentVariables', () => {
+describe('readEnvironmentVariables - Basic Functionality', () => {
   afterEach(() => {
-    // Restore environment after each test
     vi.unstubAllEnvs();
     vi.clearAllMocks();
   });
 
-  it('should return an array containing environment variables', () => {
+  it('should return array of environment variables with correct structure', () => {
     const result = readEnvironmentVariables();
 
-    // Check that it returns an array
     expect(Array.isArray(result)).toBe(true);
-
-    // In a real environment, there should be at least some env vars
     expect(result.length).toBeGreaterThan(0);
+
+    // Verify data structure
+    result.forEach((item) => {
+      expect(item).toHaveProperty('key');
+      expect(item).toHaveProperty('value');
+      expect(typeof item.key).toBe('string');
+      expect(typeof item.value).toBe('string');
+    });
   });
 
-  it('should read stubbed environment variables correctly', () => {
-    // Mock environment variables
+  it('should read environment variables correctly', () => {
     vi.stubEnv('TEST_NODE_ENV', 'test');
     vi.stubEnv('TEST_API_KEY', 'secret123');
     vi.stubEnv('TEST_PORT', '3000');
 
     const result = readEnvironmentVariables();
 
-    // Check that our stubbed values are included
     expect(result).toContainEqual({ key: 'TEST_NODE_ENV', value: 'test' });
     expect(result).toContainEqual({ key: 'TEST_API_KEY', value: 'secret123' });
     expect(result).toContainEqual({ key: 'TEST_PORT', value: '3000' });
   });
 
-  it('should handle empty string values and display as <empty>', () => {
+  it('should produce consistent output for same environment', () => {
+    vi.stubEnv('TEST_VAR', 'test');
+
+    const result1 = readEnvironmentVariables();
+    const result2 = readEnvironmentVariables();
+
+    expect(result1).toEqual(result2);
+  });
+});
+
+describe('readEnvironmentVariables - Value Transformation', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.clearAllMocks();
+  });
+
+  it('should transform empty strings to <empty> placeholder', () => {
     vi.stubEnv('EMPTY_VAR', '');
     vi.stubEnv('NORMAL_VAR', 'value');
 
@@ -42,8 +60,15 @@ describe('readEnvironmentVariables', () => {
     expect(result).toContainEqual({ key: 'EMPTY_VAR', value: '<empty>' });
     expect(result).toContainEqual({ key: 'NORMAL_VAR', value: 'value' });
   });
+});
 
-  it('should preserve multiline values', () => {
+describe('readEnvironmentVariables - Edge Cases', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.clearAllMocks();
+  });
+
+  it('should preserve multiline values without modification', () => {
     const multilineValue = 'line1\nline2\nline3';
     vi.stubEnv('MULTILINE_VAR', multilineValue);
 
@@ -61,7 +86,7 @@ describe('readEnvironmentVariables', () => {
     expect(result).toContainEqual({ key: 'LONG_VAR', value: longValue });
   });
 
-  it('should handle special characters in keys and values', () => {
+  it('should handle special characters correctly', () => {
     vi.stubEnv('SPECIAL_KEY-123', 'value with spaces');
     vi.stubEnv('UNICODE_VAR', '日本語の値 🚀');
     vi.stubEnv('QUOTES_VAR', '"double" and \'single\' quotes');
@@ -73,21 +98,7 @@ describe('readEnvironmentVariables', () => {
     expect(result).toContainEqual({ key: 'QUOTES_VAR', value: '"double" and \'single\' quotes' });
   });
 
-  it('should return consistent data structure', () => {
-    vi.stubEnv('TEST_VAR', 'test');
-
-    const result = readEnvironmentVariables();
-
-    expect(Array.isArray(result)).toBe(true);
-    result.forEach((item) => {
-      expect(item).toHaveProperty('key');
-      expect(item).toHaveProperty('value');
-      expect(typeof item.key).toBe('string');
-      expect(typeof item.value).toBe('string');
-    });
-  });
-
-  it('should handle PATH-like variables with colons and semicolons', () => {
+  it('should handle PATH-like variables with special delimiters', () => {
     const pathValue = '/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin';
     vi.stubEnv('PATH', pathValue);
 
@@ -95,52 +106,52 @@ describe('readEnvironmentVariables', () => {
 
     expect(result).toContainEqual({ key: 'PATH', value: pathValue });
   });
+});
 
-  describe('Error handling', () => {
-    it('should log and re-throw errors when process.env access fails', () => {
-      // Mock console methods to capture log output
-      const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+describe('readEnvironmentVariables - Error Handling', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
+  });
 
-      // Mock Object.entries to throw an error
-      const originalEntries = Object.entries;
-      vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
-        throw new Error('Mock environment access error');
-      });
+  it('should log and re-throw Error instances with proper message', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalEntries = Object.entries;
 
-      expect(() => readEnvironmentVariables()).toThrow(
-        'Environment variable reading failed: Mock environment access error',
-      );
-
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Failed to read environment variables: Mock environment access error',
-      );
-
-      // Restore Object.entries
-      Object.entries = originalEntries;
-      errorSpy.mockRestore();
+    vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+      throw new Error('Mock environment access error');
     });
 
-    it('should handle unknown error types properly', () => {
-      const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    expect(() => readEnvironmentVariables()).toThrow(
+      'Environment variable reading failed: Mock environment access error',
+    );
 
-      // Mock Object.entries to throw a non-Error object
-      const originalEntries = Object.entries;
-      vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
-        // eslint-disable-next-line @typescript-eslint/no-throw-literal
-        throw 'String error';
-      });
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Failed to read environment variables: Mock environment access error',
+    );
 
-      expect(() => readEnvironmentVariables()).toThrow(
-        'Environment variable reading failed: Unknown error occurred',
-      );
+    Object.entries = originalEntries;
+    errorSpy.mockRestore();
+  });
 
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Failed to read environment variables: Unknown error occurred',
-      );
+  it('should handle non-Error objects gracefully', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalEntries = Object.entries;
 
-      // Restore Object.entries
-      Object.entries = originalEntries;
-      errorSpy.mockRestore();
+    vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal
+      throw 'String error';
     });
+
+    expect(() => readEnvironmentVariables()).toThrow(
+      'Environment variable reading failed: Unknown error occurred',
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Failed to read environment variables: Unknown error occurred',
+    );
+
+    Object.entries = originalEntries;
+    errorSpy.mockRestore();
   });
 });
