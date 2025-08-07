@@ -1,18 +1,22 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { formatValueWithColor } from '../../../src/utils/colorFormatter.js';
 import { colorConfig } from '../../../src/config/colorConfig.js';
 
+// Mock chalk to avoid environment dependencies
+vi.mock('chalk', () => ({
+  default: {
+    yellow: {
+      bold: vi.fn((text: string) => `[YELLOW_BOLD]${text}[/YELLOW_BOLD]`),
+    },
+  },
+}));
+
 describe('colorFormatter - formatValueWithColor Function', () => {
-  describe('Core Functionality - Most Critical Tests', () => {
-    it('should apply yellow bold styling to <empty> value based on config', () => {
-      const result = formatValueWithColor('<empty>');
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
-      // Verify ANSI escape sequences are present (forced color mode)
-      // eslint-disable-next-line no-control-regex
-      expect(result).toContain('\u001b['); // ANSI escape start
-      expect(result.length).toBeGreaterThan('<empty>'.length);
-    });
-
+  describe('Core Logic Tests', () => {
     it('should return normal strings unchanged', () => {
       const testValues = ['normal_value', 'API_KEY_123', '/usr/local/bin', 'production'];
 
@@ -26,29 +30,66 @@ describe('colorFormatter - formatValueWithColor Function', () => {
       expect(formatValueWithColor(emptyString)).toBe(emptyString);
     });
 
-    it('should correctly read configuration from colorConfig', () => {
-      // Verify that our config structure is correct
+    it('should handle edge cases correctly', () => {
+      const variations = ['<EMPTY>', '<Empty>', ' <empty>', '<empty> ', 'prefix<empty>suffix'];
+
+      variations.forEach((value) => {
+        expect(formatValueWithColor(value)).toBe(value);
+      });
+    });
+  });
+
+  describe('Chalk Integration Tests', () => {
+    it('should call chalk.yellow.bold for <empty> values', () => {
+      const result = formatValueWithColor('<empty>');
+
+      expect(result).toBe('[YELLOW_BOLD]<empty>[/YELLOW_BOLD]');
+    });
+
+    it('should not modify normal values', () => {
+      const testValues = ['normal_value', '', '<EMPTY>'];
+
+      testValues.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(value);
+        expect(result).not.toContain('[YELLOW_BOLD]');
+      });
+    });
+
+    it('should process <empty> values differently from normal values', () => {
+      const emptyResult = formatValueWithColor('<empty>');
+      const normalResult = formatValueWithColor('normal');
+
+      expect(emptyResult).toBe('[YELLOW_BOLD]<empty>[/YELLOW_BOLD]');
+      expect(normalResult).toBe('normal');
+      expect(emptyResult).not.toBe('<empty>');
+    });
+  });
+
+  describe('Configuration Tests', () => {
+    it('should read configuration structure correctly', () => {
       expect(colorConfig.specialValues.empty).toEqual({
         color: 'yellow',
         bold: true,
       });
-
-      // Verify the function uses the config
-      const result = formatValueWithColor('<empty>');
-      expect(result).not.toBe('<empty>'); // Should be styled
     });
 
-    it('should produce string containing basic ANSI escape sequences for <empty>', () => {
+    it('should be a function that returns strings', () => {
+      expect(typeof formatValueWithColor).toBe('function');
+
+      const emptyResult = formatValueWithColor('<empty>');
+      const normalResult = formatValueWithColor('normal');
+
+      expect(typeof emptyResult).toBe('string');
+      expect(typeof normalResult).toBe('string');
+    });
+
+    it('should use configuration to determine styling', () => {
+      // Test that config.bold: true results in bold styling
       const result = formatValueWithColor('<empty>');
 
-      // Check for basic ANSI structure (color codes and reset codes)
-      // eslint-disable-next-line no-control-regex
-      expect(result).toMatch(/\u001b\[\d+m.*\u001b\[\d+m/);
-
-      // Verify original text is preserved when ANSI codes are stripped
-      // eslint-disable-next-line no-control-regex
-      const strippedResult = result.replace(/\u001b\[\d+m/g, '');
-      expect(strippedResult).toBe('<empty>');
+      expect(result).toContain('[YELLOW_BOLD]');
+      expect(result).toBe('[YELLOW_BOLD]<empty>[/YELLOW_BOLD]');
     });
   });
 });
