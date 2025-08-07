@@ -19,3 +19,40 @@ export function tableContainsKey(table: string, key: string): boolean {
 
   return true;
 }
+
+/**
+ * Check if table has valid structure with headers and borders
+ * @param table - The table string to check
+ * @returns True if table has proper structure
+ */
+export function tableHasValidStructure(table: string): boolean {
+  if (!table || typeof table !== 'string') return false;
+
+  // Check for essential headers
+  const hasHeaders = table.includes('KEY') && table.includes('VALUE');
+
+  // Check for some kind of table structure (any border characters)
+  const hasBorders = /[┌┐└┘├┤┬┴┼─│╭╮╰╯]/.test(table) || /[+\-|]/.test(table); // Also accept ASCII borders
+
+  return hasHeaders && hasBorders;
+}
+
+/**
+ * Check if table contains a key-value pair (both may be wrapped)
+ * @param table - The table string to search in
+ * @param key - The key to search for
+ * @param value - The value to search for
+ * @returns True if both key and value exist in the table
+ */
+export function tableContainsDataPair(table: string, key: string, value: string): boolean {
+  return tableContainsKey(table, key) && table.includes(value);
+}
+
+/**
+ * Check if table output is valid (non-empty string with content)
+ * @param table - The table string to validate
+ * @returns True if table is a valid output
+ */
+export function isValidTableOutput(table: string): boolean {
+  return typeof table === 'string' && table.length > 0 && table.trim().length > 0;
+}
