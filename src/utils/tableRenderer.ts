@@ -2,6 +2,7 @@ import Table from 'cli-table3';
 import type { EnvironmentData } from '../types/environment.js';
 import type { TableLayoutConfig } from '../config/tableConfig.js';
 import type { ColumnWidths } from './columnWidthCalculator.js';
+import { formatValueWithColor } from './colorFormatter.js';
 
 /**
  * Creates a cli-table3 instance with the specified configuration
@@ -29,7 +30,7 @@ export function renderEnvironmentTable(
   const table = createTableInstance(config, widths);
 
   data.forEach((item) => {
-    table.push([item.key, item.value]);
+    table.push([item.key, formatValueWithColor(item.value)]);
   });
 
   return table.toString();
