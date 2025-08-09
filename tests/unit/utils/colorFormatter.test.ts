@@ -5,6 +5,9 @@ import { colorConfig } from '../../../src/config/colorConfig.js';
 // Mock chalk to avoid environment dependencies
 vi.mock('chalk', () => ({
   default: {
+    cyan: vi.fn((text: string) => `[CYAN]${text}[/CYAN]`),
+    green: vi.fn((text: string) => `[GREEN]${text}[/GREEN]`),
+    red: vi.fn((text: string) => `[RED]${text}[/RED]`),
     yellow: {
       bold: vi.fn((text: string) => `[YELLOW_BOLD]${text}[/YELLOW_BOLD]`),
     },
@@ -66,11 +69,50 @@ describe('colorFormatter - formatValueWithColor Function', () => {
     });
   });
 
+  describe('Boolean Value Color Tests', () => {
+    it('should format true values with green color (case-insensitive)', () => {
+      const trueVariations = ['true', 'True', 'TRUE', 'tRuE'];
+
+      trueVariations.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(`[GREEN]${value}[/GREEN]`);
+      });
+    });
+
+    it('should format false values with red color (case-insensitive)', () => {
+      const falseVariations = ['false', 'False', 'FALSE', 'fAlSe'];
+
+      falseVariations.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(`[RED]${value}[/RED]`);
+      });
+    });
+
+    it('should not format partial boolean matches', () => {
+      const nonBooleanValues = ['trueish', 'false_value', 'is_true', 'not_false'];
+
+      nonBooleanValues.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(value);
+        expect(result).not.toContain('[GREEN]');
+        expect(result).not.toContain('[RED]');
+      });
+    });
+  });
+
   describe('Configuration Tests', () => {
     it('should read configuration structure correctly', () => {
       expect(colorConfig.specialValues.empty).toEqual({
         color: 'yellow',
         bold: true,
+      });
+      expect(colorConfig.specialValues.true).toEqual({
+        color: 'green',
+        bold: false,
+      });
+      expect(colorConfig.specialValues.false).toEqual({
+        color: 'red',
+        bold: false,
       });
     });
 
