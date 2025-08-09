@@ -42,9 +42,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "clean": "rm -rf dist"
+    "format": "prettier --write 'src/**/*.{ts,js,json}' 'tests/**/*.{ts,js}' '*.{json,js,ts}'",
+    "format:check": "prettier --check 'src/**/*.{ts,js,json}' 'tests/**/*.{ts,js}' '*.{json,js,ts}'",
+    "clean": "rm -rf dist",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
   },
   "dependencies": {
     "chalk": "^5.3.0",
