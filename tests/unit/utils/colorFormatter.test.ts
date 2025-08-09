@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { formatKey, formatValueWithColor } from '../../../src/utils/colorFormatter.js';
+import { formatValueWithColor } from '../../../src/utils/colorFormatter.js';
 import { colorConfig } from '../../../src/config/colorConfig.js';
 
 // Mock chalk to avoid environment dependencies
@@ -114,10 +114,6 @@ describe('colorFormatter - formatValueWithColor Function', () => {
         color: 'red',
         bold: false,
       });
-      expect(colorConfig.elements.key).toEqual({
-        color: 'cyan',
-        bold: false,
-      });
     });
 
     it('should be a function that returns strings', () => {
@@ -136,44 +132,6 @@ describe('colorFormatter - formatValueWithColor Function', () => {
 
       expect(result).toContain('[YELLOW_BOLD]');
       expect(result).toBe('[YELLOW_BOLD]<empty>[/YELLOW_BOLD]');
-    });
-  });
-});
-
-describe('colorFormatter - formatKey Function', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  describe('Key Formatting Tests', () => {
-    it('should format all keys with cyan color', () => {
-      const keys = ['PATH', 'HOME', 'USER', 'NODE_ENV', 'API_KEY'];
-
-      keys.forEach((key) => {
-        const result = formatKey(key);
-        expect(result).toBe(`[CYAN]${key}[/CYAN]`);
-      });
-    });
-
-    it('should handle empty key', () => {
-      const result = formatKey('');
-      expect(result).toBe('[CYAN][/CYAN]');
-    });
-
-    it('should handle keys with special characters', () => {
-      const specialKeys = ['MY-KEY', 'MY_KEY', 'MY.KEY', 'MY KEY'];
-
-      specialKeys.forEach((key) => {
-        const result = formatKey(key);
-        expect(result).toBe(`[CYAN]${key}[/CYAN]`);
-      });
-    });
-
-    it('should be a function that returns strings', () => {
-      expect(typeof formatKey).toBe('function');
-
-      const result = formatKey('TEST_KEY');
-      expect(typeof result).toBe('string');
     });
   });
 });

@@ -1,16 +1,41 @@
 import chalk from 'chalk';
-import { colorConfig } from '../config/colorConfig.js';
+import { colorConfig, type ColorName } from '../config/colorConfig.js';
 
 /**
- * Formats environment variable keys with configured color
- *
- * @param key - The environment variable key to format
- * @returns The formatted key with color styling applied
+ * Get chalk color function based on color name
  */
-export function formatKey(key: string): string {
-  const config = colorConfig.elements.key;
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-  return config.bold ? chalk[config.color].bold(key) : chalk[config.color](key);
+function getChalkColor(color: ColorName) {
+  switch (color) {
+    case 'yellow':
+      return chalk.yellow;
+    case 'green':
+      return chalk.green;
+    case 'red':
+      return chalk.red;
+    case 'cyan':
+      return chalk.cyan;
+    case 'blue':
+      return chalk.blue;
+    case 'gray':
+      return chalk.gray;
+    case 'magenta':
+      return chalk.magenta;
+    default: {
+      return chalk.white;
+    }
+  }
+}
+
+/**
+ * Apply color and bold styling to text
+ * @param color - Color name from configuration
+ * @param bold - Whether to apply bold styling
+ * @param text - Text to style
+ * @returns Styled text
+ */
+export function applyColorStyle(color: ColorName, bold: boolean, text: string): string {
+  const colorFn = getChalkColor(color);
+  return bold ? colorFn.bold(text) : colorFn(text);
 }
 
 /**
@@ -24,21 +49,18 @@ export function formatValueWithColor(value: string): string {
   // Check for <empty> value
   if (value === '<empty>') {
     const config = colorConfig.specialValues.empty;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    return config.bold ? chalk[config.color].bold(value) : chalk[config.color](value);
+    return applyColorStyle(config.color, config.bold, value);
   }
 
   // Check for boolean values (case-insensitive)
   const lowerValue = value.toLowerCase();
   if (lowerValue === 'true') {
     const config = colorConfig.specialValues.true;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    return config.bold ? chalk[config.color].bold(value) : chalk[config.color](value);
+    return applyColorStyle(config.color, config.bold, value);
   }
   if (lowerValue === 'false') {
     const config = colorConfig.specialValues.false;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    return config.bold ? chalk[config.color].bold(value) : chalk[config.color](value);
+    return applyColorStyle(config.color, config.bold, value);
   }
 
   return value;
