@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { formatValueWithColor } from '../../../src/utils/colorFormatter.js';
-import { colorConfig } from '../../../src/config/colorConfig.js';
+import { defaultConfig } from '../../../src/config/index.js';
 
 // Mock chalk to avoid environment dependencies
 vi.mock('chalk', () => ({
@@ -102,15 +102,15 @@ describe('colorFormatter - formatValueWithColor Function', () => {
 
   describe('Configuration Tests', () => {
     it('should read configuration structure correctly', () => {
-      expect(colorConfig.specialValues.empty).toEqual({
+      expect(defaultConfig.color.specialValues.empty).toEqual({
         color: 'yellow',
         bold: true,
       });
-      expect(colorConfig.specialValues.true).toEqual({
+      expect(defaultConfig.color.specialValues.true).toEqual({
         color: 'green',
         bold: false,
       });
-      expect(colorConfig.specialValues.false).toEqual({
+      expect(defaultConfig.color.specialValues.false).toEqual({
         color: 'red',
         bold: false,
       });

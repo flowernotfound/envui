@@ -1,5 +1,5 @@
-import type { EnvironmentData } from '../types/environment.js';
-import { getTableConfig } from '../config/tableConfig.js';
+import type { EnvironmentData } from '../types/index.js';
+import { defaultConfig } from '../config/index.js';
 import { calculateColumnWidths } from '../utils/columnWidthCalculator.js';
 import { renderEnvironmentTable } from '../utils/tableRenderer.js';
 
@@ -11,9 +11,12 @@ import { renderEnvironmentTable } from '../utils/tableRenderer.js';
  */
 export function createEnvironmentTable(data: EnvironmentData[] = []): string {
   try {
-    const config = getTableConfig();
-    const widths = calculateColumnWidths(config);
-    return renderEnvironmentTable(data, config, widths);
+    const tableConfig = {
+      ...defaultConfig.table.layout,
+      ...defaultConfig.table.formatting,
+    };
+    const widths = calculateColumnWidths(tableConfig);
+    return renderEnvironmentTable(data, tableConfig, widths);
   } catch (error) {
     throw new Error(
       `Failed to create table: ${error instanceof Error ? error.message : 'Unknown error'}`,
