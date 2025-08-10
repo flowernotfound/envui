@@ -1,7 +1,5 @@
 import Table from 'cli-table3';
-import type { EnvironmentData } from '../types/environment.js';
-import type { TableLayoutConfig } from '../config/tableConfig.js';
-import type { ColumnWidths } from './columnWidthCalculator.js';
+import type { EnvironmentData, TableLayoutConfig, ColumnWidths } from '../types/index.js';
 import { formatValueWithColor } from './colorFormatter.js';
 
 /**

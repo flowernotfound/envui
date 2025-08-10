@@ -1,12 +1,4 @@
-import type { TableLayoutConfig } from '../config/tableConfig.js';
-
-/**
- * Calculated column widths for table display
- */
-export interface ColumnWidths {
-  keyWidth: number;
-  valueWidth: number;
-}
+import type { TableLayoutConfig, ColumnWidths } from '../types/index.js';
 
 /**
  * Calculates column widths based on terminal size and configuration

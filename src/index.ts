@@ -1,9 +1,12 @@
-// This file will export the main functionality of envui for library usage
+// Main library exports for envui
 import pkg from '../package.json' with { type: 'json' };
 
-export const version = pkg.version;
+// Core functionality
+export { readEnvironmentVariables } from './core/env-reader.js';
+export { createEnvironmentTable } from './core/table.js';
 
-// Placeholder for future exports
-export function hello(): string {
-  return 'Hello from envui library!';
-}
+// Types (only EnvironmentData is exposed as public API)
+export type { EnvironmentData } from './types/index.js';
+
+// Version information
+export const version = pkg.version;

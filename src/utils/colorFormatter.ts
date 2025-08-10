@@ -1,5 +1,6 @@
 import chalk from 'chalk';
-import { colorConfig, type ColorName } from '../config/colorConfig.js';
+import { type ColorName } from '../types/index.js';
+import { defaultConfig } from '../config/index.js';
 
 /**
  * Get chalk color function based on color name
@@ -48,18 +49,18 @@ export function applyColorStyle(color: ColorName, bold: boolean, text: string): 
 export function formatValueWithColor(value: string): string {
   // Check for <empty> value
   if (value === '<empty>') {
-    const config = colorConfig.specialValues.empty;
+    const config = defaultConfig.color.specialValues.empty;
     return applyColorStyle(config.color, config.bold, value);
   }
 
   // Check for boolean values (case-insensitive)
   const lowerValue = value.toLowerCase();
   if (lowerValue === 'true') {
-    const config = colorConfig.specialValues.true;
+    const config = defaultConfig.color.specialValues.true;
     return applyColorStyle(config.color, config.bold, value);
   }
   if (lowerValue === 'false') {
-    const config = colorConfig.specialValues.false;
+    const config = defaultConfig.color.specialValues.false;
     return applyColorStyle(config.color, config.bold, value);
   }
 
