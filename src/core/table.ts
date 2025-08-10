@@ -18,8 +18,7 @@ export function createEnvironmentTable(data: EnvironmentData[] = []): string {
     const widths = calculateColumnWidths(tableConfig);
     return renderEnvironmentTable(data, tableConfig, widths);
   } catch (error) {
-    throw new Error(
-      `Failed to create table: ${error instanceof Error ? error.message : 'Unknown error'}`,
-    );
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    throw new Error(`Failed to create table: ${message}`);
   }
 }

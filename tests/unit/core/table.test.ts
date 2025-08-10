@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createEnvironmentTable } from '../../../src/core/table.js';
 import {
   tableContainsKey,
@@ -136,5 +136,64 @@ describe('createEnvironmentTable - Responsive Layout', () => {
 
     expect(tableHasValidStructure(table)).toBe(true);
     expect(tableContainsDataPair(table, 'DEFAULT_TEST', 'value')).toBe(true);
+  });
+});
+
+describe('createEnvironmentTable - Error Handling', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
+  });
+
+  it('should throw error when columnWidthCalculator fails', async () => {
+    // Mock calculateColumnWidths to throw error
+    const mockCalculateColumnWidths = vi
+      .spyOn(await import('../../../src/utils/columnWidthCalculator.js'), 'calculateColumnWidths')
+      .mockImplementation(() => {
+        throw new Error('Column width calculation failed');
+      });
+
+    try {
+      expect(() => createEnvironmentTable([{ key: 'TEST', value: 'value' }])).toThrow(
+        /Failed to create table/,
+      );
+    } finally {
+      mockCalculateColumnWidths.mockRestore();
+    }
+  });
+
+  it('should throw error when tableRenderer fails', async () => {
+    // Mock renderEnvironmentTable to throw error
+    const mockRenderTable = vi
+      .spyOn(await import('../../../src/utils/tableRenderer.js'), 'renderEnvironmentTable')
+      .mockImplementation(() => {
+        throw new Error('Table rendering failed');
+      });
+
+    try {
+      expect(() => createEnvironmentTable([{ key: 'TEST', value: 'value' }])).toThrow(
+        /Failed to create table/,
+      );
+    } finally {
+      mockRenderTable.mockRestore();
+    }
+  });
+
+  it('should handle non-Error objects in table creation', async () => {
+    // Mock calculateColumnWidths to throw non-Error object
+    const mockCalculateColumnWidths = vi
+      .spyOn(await import('../../../src/utils/columnWidthCalculator.js'), 'calculateColumnWidths')
+      .mockImplementation(() => {
+        // eslint-disable-next-line @typescript-eslint/no-throw-literal
+        throw 'String error in column calculation';
+      });
+
+    try {
+      expect(() => createEnvironmentTable([{ key: 'TEST', value: 'value' }])).toThrow(
+        /Failed to create table/,
+      );
+    } finally {
+      mockCalculateColumnWidths.mockRestore();
+    }
   });
 });

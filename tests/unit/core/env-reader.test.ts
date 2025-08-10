@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { readEnvironmentVariables } from '../../../src/core/env-reader.js';
-import { logger } from '../../../src/utils/logger.js';
 
 describe('readEnvironmentVariables - Basic Functionality', () => {
   afterEach(() => {
@@ -114,28 +113,19 @@ describe('readEnvironmentVariables - Error Handling', () => {
     vi.clearAllMocks();
   });
 
-  it('should log and re-throw Error instances with proper message', () => {
-    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+  it('should throw appropriate error when environment reading fails', () => {
     const originalEntries = Object.entries;
 
     vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
       throw new Error('Mock environment access error');
     });
 
-    expect(() => readEnvironmentVariables()).toThrow(
-      'Environment variable reading failed: Mock environment access error',
-    );
-
-    expect(errorSpy).toHaveBeenCalledWith(
-      'Failed to read environment variables: Mock environment access error',
-    );
+    expect(() => readEnvironmentVariables()).toThrow(/Failed to read environment variables/);
 
     Object.entries = originalEntries;
-    errorSpy.mockRestore();
   });
 
   it('should handle non-Error objects gracefully', () => {
-    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
     const originalEntries = Object.entries;
 
     vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
@@ -143,15 +133,52 @@ describe('readEnvironmentVariables - Error Handling', () => {
       throw 'String error';
     });
 
-    expect(() => readEnvironmentVariables()).toThrow(
-      'Environment variable reading failed: Unknown error occurred',
-    );
-
-    expect(errorSpy).toHaveBeenCalledWith(
-      'Failed to read environment variables: Unknown error occurred',
-    );
+    expect(() => readEnvironmentVariables()).toThrow(/Failed to read environment variables/);
 
     Object.entries = originalEntries;
-    errorSpy.mockRestore();
+  });
+
+  it('should handle process.env undefined edge case', () => {
+    const originalProcessEnv = process.env;
+
+    // Mock process.env to be undefined
+    Object.defineProperty(process, 'env', {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+
+    // Function should handle undefined process.env gracefully
+    const result = readEnvironmentVariables();
+    expect(result).toEqual([]);
+
+    // Restore original process.env
+    Object.defineProperty(process, 'env', {
+      value: originalProcessEnv,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it('should handle process.env null edge case', () => {
+    const originalProcessEnv = process.env;
+
+    // Mock process.env to be null
+    Object.defineProperty(process, 'env', {
+      value: null,
+      writable: true,
+      configurable: true,
+    });
+
+    // Function should handle null process.env gracefully
+    const result = readEnvironmentVariables();
+    expect(result).toEqual([]);
+
+    // Restore original process.env
+    Object.defineProperty(process, 'env', {
+      value: originalProcessEnv,
+      writable: true,
+      configurable: true,
+    });
   });
 });
