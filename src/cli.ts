@@ -29,17 +29,9 @@ program
       process.exit(EXIT_CODES.SUCCESS);
     } catch (error) {
       if (error instanceof Error) {
-        if (
-          error.message.includes('permission') ||
-          error.message.includes('EPERM') ||
-          error.message.includes('EACCES')
-        ) {
-          logger.error(ERROR_MESSAGES.PERMISSION_DENIED);
-        } else {
-          logger.error(error.message);
-        }
+        logger.error(error.message);
       } else {
-        logger.error(ERROR_MESSAGES.GENERAL_ERROR);
+        logger.error('An unexpected error occurred');
       }
       process.exit(EXIT_CODES.SYSTEM_ERROR);
     }
