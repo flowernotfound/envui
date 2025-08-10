@@ -1,5 +1,6 @@
 import type { EnvironmentData } from '../types/environment.js';
 import { logger } from '../utils/logger.js';
+import { ERROR_MESSAGES } from '../constants/index.js';
 
 /**
  * Reads all environment variables from process.env
@@ -28,7 +29,8 @@ export function readEnvironmentVariables(): EnvironmentData[] {
     return envData;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    logger.error(`Failed to read environment variables: ${errorMessage}`);
-    throw new Error(`Environment variable reading failed: ${errorMessage}`);
+    const fullMessage = `${ERROR_MESSAGES.ENV_READ_FAILED}: ${errorMessage}`;
+    logger.error(fullMessage);
+    throw new Error(fullMessage);
   }
 }

@@ -123,11 +123,11 @@ describe('readEnvironmentVariables - Error Handling', () => {
     });
 
     expect(() => readEnvironmentVariables()).toThrow(
-      'Environment variable reading failed: Mock environment access error',
+      'Error: Failed to read environment variables: Mock environment access error',
     );
 
     expect(errorSpy).toHaveBeenCalledWith(
-      'Failed to read environment variables: Mock environment access error',
+      'Error: Failed to read environment variables: Mock environment access error',
     );
 
     Object.entries = originalEntries;
@@ -144,11 +144,171 @@ describe('readEnvironmentVariables - Error Handling', () => {
     });
 
     expect(() => readEnvironmentVariables()).toThrow(
-      'Environment variable reading failed: Unknown error occurred',
+      'Error: Failed to read environment variables: Unknown error occurred',
     );
 
     expect(errorSpy).toHaveBeenCalledWith(
-      'Failed to read environment variables: Unknown error occurred',
+      'Error: Failed to read environment variables: Unknown error occurred',
+    );
+
+    Object.entries = originalEntries;
+    errorSpy.mockRestore();
+  });
+
+  it('should handle system permission errors properly', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalEntries = Object.entries;
+
+    vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+      const error = new Error('EPERM: operation not permitted');
+      error.name = 'SystemError';
+      throw error;
+    });
+
+    expect(() => readEnvironmentVariables()).toThrow(
+      'Error: Failed to read environment variables: EPERM: operation not permitted',
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Error: Failed to read environment variables: EPERM: operation not permitted',
+    );
+
+    Object.entries = originalEntries;
+    errorSpy.mockRestore();
+  });
+
+  it('should handle access denied errors properly', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalEntries = Object.entries;
+
+    vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+      const error = new Error('EACCES: permission denied');
+      error.name = 'SystemError';
+      throw error;
+    });
+
+    expect(() => readEnvironmentVariables()).toThrow(
+      'Error: Failed to read environment variables: EACCES: permission denied',
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Error: Failed to read environment variables: EACCES: permission denied',
+    );
+
+    Object.entries = originalEntries;
+    errorSpy.mockRestore();
+  });
+
+  it('should handle process.env undefined edge case', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalProcessEnv = process.env;
+
+    // Mock process.env to be undefined
+    Object.defineProperty(process, 'env', {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+
+    // Function should handle undefined process.env gracefully
+    const result = readEnvironmentVariables();
+    expect(result).toEqual([]);
+
+    // Restore original process.env
+    Object.defineProperty(process, 'env', {
+      value: originalProcessEnv,
+      writable: true,
+      configurable: true,
+    });
+
+    errorSpy.mockRestore();
+  });
+
+  it('should handle process.env null edge case', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalProcessEnv = process.env;
+
+    // Mock process.env to be null
+    Object.defineProperty(process, 'env', {
+      value: null,
+      writable: true,
+      configurable: true,
+    });
+
+    // Function should handle null process.env gracefully
+    const result = readEnvironmentVariables();
+    expect(result).toEqual([]);
+
+    // Restore original process.env
+    Object.defineProperty(process, 'env', {
+      value: originalProcessEnv,
+      writable: true,
+      configurable: true,
+    });
+
+    errorSpy.mockRestore();
+  });
+
+  it('should handle memory allocation errors', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalEntries = Object.entries;
+
+    vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+      const error = new Error('Cannot allocate memory');
+      error.name = 'Error';
+      throw error;
+    });
+
+    expect(() => readEnvironmentVariables()).toThrow(
+      'Error: Failed to read environment variables: Cannot allocate memory',
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Error: Failed to read environment variables: Cannot allocate memory',
+    );
+
+    Object.entries = originalEntries;
+    errorSpy.mockRestore();
+  });
+
+  it('should handle numeric error codes', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalEntries = Object.entries;
+
+    vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+      // eslint-disable-next-line @typescript-eslint/no-throw-literal
+      throw 42; // Numeric error
+    });
+
+    expect(() => readEnvironmentVariables()).toThrow(
+      'Error: Failed to read environment variables: Unknown error occurred',
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Error: Failed to read environment variables: Unknown error occurred',
+    );
+
+    Object.entries = originalEntries;
+    errorSpy.mockRestore();
+  });
+
+  it('should preserve original error stack trace in logged message', () => {
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation(() => {});
+    const originalEntries = Object.entries;
+
+    const customError = new Error('Custom stack trace error');
+    customError.stack = 'Custom Stack\n  at someFunction\n  at anotherFunction';
+
+    vi.spyOn(Object, 'entries').mockImplementationOnce(() => {
+      throw customError;
+    });
+
+    expect(() => readEnvironmentVariables()).toThrow(
+      'Error: Failed to read environment variables: Custom stack trace error',
+    );
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Error: Failed to read environment variables: Custom stack trace error',
     );
 
     Object.entries = originalEntries;
