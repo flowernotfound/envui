@@ -1,15 +1,17 @@
 #!/usr/bin/env node
 
+import { CommanderError } from 'commander';
 import { createCliProgram } from './cli/config.js';
-import { setupCliErrorHandling } from './cli/errorHandler.js';
 import { createEnvironmentTable } from './core/table.js';
 import { readEnvironmentVariables } from './core/env-reader.js';
 import { logger } from './utils/logger.js';
-import { EXIT_CODES, ERROR_MESSAGES } from './constants/index.js';
+import { EXIT_CODES, ERROR_MESSAGES, CLI_MESSAGES } from './constants/index.js';
 
 // Create and configure CLI program
 const program = createCliProgram();
-setupCliErrorHandling(program);
+
+// Enable exit override for custom error handling
+program.exitOverride();
 
 // Set main action
 program.action(() => {
@@ -36,4 +38,26 @@ program.action(() => {
   }
 });
 
-program.parse(process.argv);
+// Parse command line arguments with type-safe error handling
+try {
+  program.parse(process.argv);
+} catch (err) {
+  if (err instanceof CommanderError && err.code === 'commander.unknownOption') {
+    // Handle unknown option with custom message
+    console.error(err.message);
+    console.error(CLI_MESSAGES.INVALID_OPTION_HELP);
+    process.exit(EXIT_CODES.INVALID_ARGUMENT);
+  } else if (err instanceof CommanderError) {
+    // Handle other Commander errors with default behavior
+    console.error(err.message);
+    process.exit(err.exitCode || 1);
+  } else {
+    // Handle system errors with logger
+    if (err instanceof Error) {
+      logger.error(err.message);
+    } else {
+      logger.error('An unexpected error occurred');
+    }
+    process.exit(EXIT_CODES.SYSTEM_ERROR);
+  }
+}
