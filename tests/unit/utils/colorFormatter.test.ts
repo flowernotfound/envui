@@ -100,6 +100,114 @@ describe('colorFormatter - formatValueWithColor Function', () => {
     });
   });
 
+  describe('Edge Cases', () => {
+    it('should handle empty string correctly', () => {
+      const result = formatValueWithColor('');
+      expect(result).toBe('');
+      expect(result).not.toContain('[YELLOW_BOLD]');
+    });
+
+    it('should handle values with special symbols', () => {
+      const specialValues = [
+        '$100.00',
+        '50%',
+        'user@example.com',
+        '#hashtag',
+        'A & B',
+        '!important',
+        '$#@!%&*()_+=',
+      ];
+
+      specialValues.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(value);
+        expect(result).not.toContain('[GREEN]');
+        expect(result).not.toContain('[RED]');
+        expect(result).not.toContain('[YELLOW_BOLD]');
+      });
+    });
+
+    it('should handle whitespace-only values', () => {
+      const whitespaceValues = ['   ', '\t\t', '\n\n', ' \t \n '];
+
+      whitespaceValues.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(value);
+        expect(result).not.toContain('[YELLOW_BOLD]');
+      });
+    });
+
+    it('should handle values that look like booleans but are not exact matches', () => {
+      const almostBooleans = [
+        ' true',
+        'true ',
+        ' true ',
+        'true\n',
+        '\ttrue',
+        ' false',
+        'false ',
+        ' false ',
+        'false\n',
+        '\tfalse',
+      ];
+
+      almostBooleans.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(value);
+        expect(result).not.toContain('[GREEN]');
+        expect(result).not.toContain('[RED]');
+      });
+    });
+
+    it('should handle very long values without issues', () => {
+      const longValue = 'a'.repeat(300);
+      const result = formatValueWithColor(longValue);
+      expect(result).toBe(longValue);
+      expect(result.length).toBe(300);
+    });
+
+    it('should handle values with newlines', () => {
+      const multilineValue = 'line1\nline2\nline3';
+      const result = formatValueWithColor(multilineValue);
+      expect(result).toBe(multilineValue);
+    });
+
+    it('should handle numeric strings', () => {
+      const numericValues = ['0', '42', '-1', '3.14', '1e10', 'NaN', 'Infinity'];
+
+      numericValues.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(value);
+        expect(result).not.toContain('[GREEN]');
+        expect(result).not.toContain('[RED]');
+      });
+    });
+
+    it('should handle URLs and paths', () => {
+      const urlPaths = [
+        'https://example.com',
+        'http://localhost:3000',
+        '/usr/local/bin',
+        'C:\\Windows\\System32',
+        'file:///path/to/file',
+      ];
+
+      urlPaths.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(value);
+      });
+    });
+
+    it('should handle JSON-like strings', () => {
+      const jsonStrings = ['{"key":"value"}', '[1,2,3]', '{"nested":{"prop":true}}'];
+
+      jsonStrings.forEach((value) => {
+        const result = formatValueWithColor(value);
+        expect(result).toBe(value);
+      });
+    });
+  });
+
   describe('Configuration Tests', () => {
     it('should read configuration structure correctly', () => {
       expect(defaultConfig.color.specialValues.empty).toEqual({

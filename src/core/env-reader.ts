@@ -8,8 +8,7 @@ import type { EnvironmentData } from '../types/environment.js';
 export function readEnvironmentVariables(): EnvironmentData[] {
   try {
     const envData: EnvironmentData[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    const env = process.env || {};
+    const env = process.env;
 
     for (const [key, value] of Object.entries(env)) {
       if (value === undefined) {

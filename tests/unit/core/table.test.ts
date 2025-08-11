@@ -139,6 +139,96 @@ describe('createEnvironmentTable - Responsive Layout', () => {
   });
 });
 
+describe('createEnvironmentTable - Edge Cases', () => {
+  it('should handle very long values (200-300 characters)', () => {
+    const longValue = 'a'.repeat(250);
+    const data = [{ key: 'VERY_LONG_VALUE', value: longValue }];
+
+    const table = createEnvironmentTable(data);
+
+    expect(tableHasValidStructure(table)).toBe(true);
+    expect(tableContainsKey(table, 'VERY_LONG_VALUE')).toBe(true);
+    // Verify that at least part of the long value is present
+    expect(table).toContain('aaa');
+  });
+
+  it('should handle multiple long values with proper width adjustment', () => {
+    const longValue1 = 'This is a very long value that needs to be wrapped ' + 'x'.repeat(150);
+    const longValue2 = 'Another long value with different content ' + 'y'.repeat(150);
+    const data = [
+      { key: 'LONG_VALUE_1', value: longValue1 },
+      { key: 'LONG_VALUE_2', value: longValue2 },
+      { key: 'SHORT', value: 'short' },
+    ];
+
+    const table = createEnvironmentTable(data);
+
+    expect(tableHasValidStructure(table)).toBe(true);
+    expect(tableContainsKey(table, 'LONG_VALUE_1')).toBe(true);
+    expect(tableContainsKey(table, 'LONG_VALUE_2')).toBe(true);
+    expect(tableContainsKey(table, 'SHORT')).toBe(true);
+  });
+
+  it('should handle special symbols in values', () => {
+    const data = [
+      { key: 'DOLLAR_SIGN', value: '$100.00' },
+      { key: 'PERCENT', value: '50% complete' },
+      { key: 'AMPERSAND', value: 'A & B' },
+      { key: 'AT_SIGN', value: 'user@example.com' },
+      { key: 'EXCLAMATION', value: 'Hello!' },
+      { key: 'HASH', value: '#hashtag' },
+      { key: 'MIXED_SYMBOLS', value: '$#@!%&*()_+=' },
+    ];
+
+    const table = createEnvironmentTable(data);
+
+    expect(tableHasValidStructure(table)).toBe(true);
+    expect(tableContainsDataPair(table, 'DOLLAR_SIGN', '$100.00')).toBe(true);
+    expect(tableContainsDataPair(table, 'PERCENT', '50% complete')).toBe(true);
+    expect(tableContainsDataPair(table, 'AMPERSAND', 'A & B')).toBe(true);
+    expect(tableContainsDataPair(table, 'AT_SIGN', 'user@example.com')).toBe(true);
+    expect(tableContainsDataPair(table, 'EXCLAMATION', 'Hello!')).toBe(true);
+    expect(tableContainsDataPair(table, 'HASH', '#hashtag')).toBe(true);
+    expect(tableContainsDataPair(table, 'MIXED_SYMBOLS', '$#@!%&*()_+=')).toBe(true);
+  });
+
+  it('should handle edge case values correctly', () => {
+    const data = [
+      { key: 'EMPTY_VALUE', value: '<empty>' },
+      { key: 'SPACE_VALUE', value: '   ' },
+      { key: 'TAB_VALUE', value: '\t\t' },
+      { key: 'NEWLINE_VALUE', value: 'line1\nline2' },
+      { key: 'BOOLEAN_TRUE', value: 'true' },
+      { key: 'BOOLEAN_FALSE', value: 'false' },
+      { key: 'NUMBER', value: '42' },
+      { key: 'URL', value: 'https://example.com/path?query=value' },
+    ];
+
+    const table = createEnvironmentTable(data);
+
+    expect(tableHasValidStructure(table)).toBe(true);
+    // Check that all keys are present
+    data.forEach(({ key }) => {
+      expect(tableContainsKey(table, key)).toBe(true);
+    });
+  });
+
+  it('should handle mix of very short and very long values', () => {
+    const data = [
+      { key: 'A', value: 'x' },
+      { key: 'VERY_LONG_KEY_NAME_THAT_IS_EXTREMELY_VERBOSE', value: 'y'.repeat(200) },
+      { key: 'B', value: 'z' },
+    ];
+
+    const table = createEnvironmentTable(data);
+
+    expect(tableHasValidStructure(table)).toBe(true);
+    expect(tableContainsKey(table, 'A')).toBe(true);
+    expect(tableContainsKey(table, 'VERY_LONG_KEY_NAME_THAT_IS_EXTREMELY_VERBOSE')).toBe(true);
+    expect(tableContainsKey(table, 'B')).toBe(true);
+  });
+});
+
 describe('createEnvironmentTable - Error Handling', () => {
   afterEach(() => {
     vi.restoreAllMocks();

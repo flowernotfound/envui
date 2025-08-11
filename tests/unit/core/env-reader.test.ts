@@ -105,6 +105,74 @@ describe('readEnvironmentVariables - Edge Cases', () => {
 
     expect(result).toContainEqual({ key: 'PATH', value: pathValue });
   });
+
+  // New edge case tests
+  it('should handle special symbols in keys and values', () => {
+    vi.stubEnv('KEY_WITH_$DOLLAR', 'value$with$dollar');
+    vi.stubEnv('KEY_WITH_%PERCENT', 'value%with%percent');
+    vi.stubEnv('KEY_WITH_&AMPERSAND', 'value&with&ampersand');
+    vi.stubEnv('KEY_WITH_@AT', 'value@with@at');
+    vi.stubEnv('KEY_WITH_!EXCLAMATION', 'value!with!exclamation');
+    vi.stubEnv('KEY_WITH_#HASH', 'value#with#hash');
+
+    const result = readEnvironmentVariables();
+
+    expect(result).toContainEqual({ key: 'KEY_WITH_$DOLLAR', value: 'value$with$dollar' });
+    expect(result).toContainEqual({ key: 'KEY_WITH_%PERCENT', value: 'value%with%percent' });
+    expect(result).toContainEqual({ key: 'KEY_WITH_&AMPERSAND', value: 'value&with&ampersand' });
+    expect(result).toContainEqual({ key: 'KEY_WITH_@AT', value: 'value@with@at' });
+    expect(result).toContainEqual({
+      key: 'KEY_WITH_!EXCLAMATION',
+      value: 'value!with!exclamation',
+    });
+    expect(result).toContainEqual({ key: 'KEY_WITH_#HASH', value: 'value#with#hash' });
+  });
+
+  it('should handle very long key names', () => {
+    const longKey = 'VERY_LONG_KEY_NAME_' + 'A'.repeat(200);
+    vi.stubEnv(longKey, 'value');
+
+    const result = readEnvironmentVariables();
+
+    expect(result).toContainEqual({ key: longKey, value: 'value' });
+  });
+
+  it('should handle values with only spaces', () => {
+    vi.stubEnv('SPACE_ONLY', '   ');
+    vi.stubEnv('TAB_ONLY', '\t\t\t');
+    vi.stubEnv('MIXED_WHITESPACE', ' \t \n ');
+
+    const result = readEnvironmentVariables();
+
+    expect(result).toContainEqual({ key: 'SPACE_ONLY', value: '   ' });
+    expect(result).toContainEqual({ key: 'TAB_ONLY', value: '\t\t\t' });
+    expect(result).toContainEqual({ key: 'MIXED_WHITESPACE', value: ' \t \n ' });
+  });
+
+  it('should handle values that are common in real environments', () => {
+    vi.stubEnv('DATABASE_URL', 'postgres://user:password@localhost:5432/dbname');
+    vi.stubEnv('JSON_CONFIG', '{"key":"value","nested":{"prop":123}}');
+    vi.stubEnv('CSV_DATA', 'col1,col2,col3\nval1,val2,val3');
+    vi.stubEnv('BOOLEAN_STRING', 'true');
+    vi.stubEnv('NUMBER_STRING', '42');
+
+    const result = readEnvironmentVariables();
+
+    expect(result).toContainEqual({
+      key: 'DATABASE_URL',
+      value: 'postgres://user:password@localhost:5432/dbname',
+    });
+    expect(result).toContainEqual({
+      key: 'JSON_CONFIG',
+      value: '{"key":"value","nested":{"prop":123}}',
+    });
+    expect(result).toContainEqual({
+      key: 'CSV_DATA',
+      value: 'col1,col2,col3\nval1,val2,val3',
+    });
+    expect(result).toContainEqual({ key: 'BOOLEAN_STRING', value: 'true' });
+    expect(result).toContainEqual({ key: 'NUMBER_STRING', value: '42' });
+  });
 });
 
 describe('readEnvironmentVariables - Error Handling', () => {
@@ -138,47 +206,42 @@ describe('readEnvironmentVariables - Error Handling', () => {
     Object.entries = originalEntries;
   });
 
-  it('should handle process.env undefined edge case', () => {
-    const originalProcessEnv = process.env;
-
-    // Mock process.env to be undefined
-    Object.defineProperty(process, 'env', {
-      value: undefined,
-      writable: true,
-      configurable: true,
+  it('should handle Object.entries throwing an error', () => {
+    // Mock Object.entries to throw an error
+    const mockEntries = vi.spyOn(Object, 'entries').mockImplementation(() => {
+      throw new Error('Mock Object.entries failure');
     });
 
-    // Function should handle undefined process.env gracefully
-    const result = readEnvironmentVariables();
-    expect(result).toEqual([]);
-
-    // Restore original process.env
-    Object.defineProperty(process, 'env', {
-      value: originalProcessEnv,
-      writable: true,
-      configurable: true,
-    });
+    try {
+      expect(() => readEnvironmentVariables()).toThrow(/Failed to read environment variables/);
+      expect(() => readEnvironmentVariables()).toThrow(/Mock Object.entries failure/);
+    } finally {
+      mockEntries.mockRestore();
+    }
   });
 
-  it('should handle process.env null edge case', () => {
-    const originalProcessEnv = process.env;
+  it('should handle unexpected system errors during processing', () => {
+    // This test validates that our error handling works for any unexpected error
+    // during environment variable processing. We'll simulate this by temporarily
+    // corrupting the process.env object.
+    const originalDescriptor = Object.getOwnPropertyDescriptor(process, 'env');
 
-    // Mock process.env to be null
-    Object.defineProperty(process, 'env', {
-      value: null,
-      writable: true,
-      configurable: true,
-    });
+    try {
+      // Create a getter that throws an error
+      Object.defineProperty(process, 'env', {
+        get: () => {
+          throw new TypeError('System error accessing environment');
+        },
+        configurable: true,
+      });
 
-    // Function should handle null process.env gracefully
-    const result = readEnvironmentVariables();
-    expect(result).toEqual([]);
-
-    // Restore original process.env
-    Object.defineProperty(process, 'env', {
-      value: originalProcessEnv,
-      writable: true,
-      configurable: true,
-    });
+      expect(() => readEnvironmentVariables()).toThrow(/Failed to read environment variables/);
+      expect(() => readEnvironmentVariables()).toThrow(/System error accessing environment/);
+    } finally {
+      // Restore the original descriptor
+      if (originalDescriptor) {
+        Object.defineProperty(process, 'env', originalDescriptor);
+      }
+    }
   });
 });
