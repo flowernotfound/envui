@@ -1,11 +1,11 @@
-import { CliError, CliErrorType } from './types.js';
+import { createCliError, CliErrorType, type CliErrorObject } from './types.js';
 import { EXIT_CODES, CLI_MESSAGES } from '../../constants/index.js';
 import { logger } from '../../utils/logger.js';
 
 /**
  * Handle CLI error and display appropriate message
  */
-export function handleCliError(error: CliError): void {
+export function handleCliError(error: CliErrorObject): void {
   switch (error.type) {
     case CliErrorType.UNKNOWN_OPTION:
       console.error(error.message);
@@ -37,8 +37,8 @@ export function handleCliError(error: CliError): void {
 /**
  * Create unknown option error
  */
-export function createUnknownOptionError(option: string): CliError {
-  return new CliError(
+export function createUnknownOptionError(option: string): CliErrorObject {
+  return createCliError(
     CliErrorType.UNKNOWN_OPTION,
     `error: unknown option '${option}'`,
     EXIT_CODES.INVALID_ARGUMENT,
@@ -48,6 +48,6 @@ export function createUnknownOptionError(option: string): CliError {
 /**
  * Create system error
  */
-export function createSystemError(message: string): CliError {
-  return new CliError(CliErrorType.SYSTEM_ERROR, message, EXIT_CODES.SYSTEM_ERROR);
+export function createSystemError(message: string): CliErrorObject {
+  return createCliError(CliErrorType.SYSTEM_ERROR, message, EXIT_CODES.SYSTEM_ERROR);
 }

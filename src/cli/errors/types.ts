@@ -10,22 +10,40 @@ export enum CliErrorType {
 }
 
 /**
- * Custom CLI error class (replacement for CommanderError)
+ * CLI error object interface
  */
-export class CliError extends Error {
-  constructor(
-    public readonly type: CliErrorType,
-    message: string,
-    public readonly exitCode: number,
-  ) {
-    super(message);
-    this.name = 'CliError';
-  }
+export interface CliErrorObject extends Error {
+  readonly type: CliErrorType;
+  readonly exitCode: number;
+  readonly code: string;
+}
 
-  /**
-   * Code property for compatibility with CommanderError
-   */
-  get code(): string {
-    return `cli.${this.type}`;
-  }
+/**
+ * Create a CLI error object
+ */
+export function createCliError(
+  type: CliErrorType,
+  message: string,
+  exitCode: number,
+): CliErrorObject {
+  const error = Object.assign(new Error(message), {
+    type,
+    exitCode,
+    code: `cli.${type}`,
+    name: 'CliError',
+  });
+  return error;
+}
+
+/**
+ * Type guard for CLI error
+ */
+export function isCliError(error: unknown): error is CliErrorObject {
+  return (
+    error instanceof Error &&
+    'type' in error &&
+    'exitCode' in error &&
+    'code' in error &&
+    (error as Error).name === 'CliError'
+  );
 }

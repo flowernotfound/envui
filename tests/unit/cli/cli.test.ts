@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { CliError, CliErrorType } from '../../../src/cli/errors/index.js';
+import { createCliError, isCliError, CliErrorType } from '../../../src/cli/errors/index.js';
 
 describe('CLI', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
@@ -313,10 +313,14 @@ describe('CLI', () => {
   // CliError handling tests
   describe('CliError handling patterns', () => {
     it('should handle unknown option error pattern', () => {
-      const mockError = new CliError(CliErrorType.UNKNOWN_OPTION, "unknown option '--invalid'", 2);
+      const mockError = createCliError(
+        CliErrorType.UNKNOWN_OPTION,
+        "unknown option '--invalid'",
+        2,
+      );
 
       // Simulate the error handling logic
-      if (mockError instanceof CliError && mockError.type === CliErrorType.UNKNOWN_OPTION) {
+      if (isCliError(mockError) && mockError.type === CliErrorType.UNKNOWN_OPTION) {
         console.error(mockError.message);
         console.error("\nUse 'envui --help' to see available options.");
       }
@@ -328,9 +332,9 @@ describe('CLI', () => {
     });
 
     it('should handle invalid argument error pattern', () => {
-      const mockError = new CliError(CliErrorType.INVALID_ARGUMENT, 'invalid argument', 2);
+      const mockError = createCliError(CliErrorType.INVALID_ARGUMENT, 'invalid argument', 2);
 
-      if (mockError instanceof CliError && mockError.type === CliErrorType.INVALID_ARGUMENT) {
+      if (isCliError(mockError) && mockError.type === CliErrorType.INVALID_ARGUMENT) {
         console.error(mockError.message);
         console.error("\nUse 'envui --help' to see available options.");
       }

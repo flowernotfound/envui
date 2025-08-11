@@ -1,12 +1,12 @@
 import type { Token } from './tokenizer.js';
-import type { CliConfig, CliError } from './types.js';
-import { OPTION_ALIASES } from './tokenizer.js';
+import type { CliConfig, ParseError } from './types.js';
+import { OPTION_ALIASES } from '../../constants/index.js';
 
 /**
  * Validate tokens
  */
-export function validateTokens(tokens: readonly Token[], config: CliConfig): readonly CliError[] {
-  const errors: CliError[] = [];
+export function validateTokens(tokens: readonly Token[], config: CliConfig): readonly ParseError[] {
+  const errors: ParseError[] = [];
   const supportedOptionsSet = new Set(config.supportedOptions);
 
   for (const token of tokens) {

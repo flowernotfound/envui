@@ -58,11 +58,6 @@ export function tokenize(args: readonly string[]): readonly Token[] {
   return tokens;
 }
 
-/**
- * Option alias mapping
- */
-export const OPTION_ALIASES: Record<string, string> = {
-  h: 'help',
-  v: 'version',
-  V: 'version',
-};
+import { OPTION_ALIASES } from '../../constants/index.js';
+
+export { OPTION_ALIASES };

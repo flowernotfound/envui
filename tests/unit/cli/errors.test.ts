@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
-  CliError,
+  createCliError,
+  isCliError,
   CliErrorType,
   createUnknownOptionError,
   createSystemError,
+  type CliErrorObject,
 } from '../../../src/cli/errors/index.js';
 
 describe('CLI Errors', () => {
@@ -24,9 +26,9 @@ describe('CLI Errors', () => {
     vi.resetModules();
   });
 
-  describe('CliError', () => {
+  describe('createCliError', () => {
     it('should create error with correct properties', () => {
-      const error = new CliError(CliErrorType.UNKNOWN_OPTION, 'test message', 2);
+      const error = createCliError(CliErrorType.UNKNOWN_OPTION, 'test message', 2);
 
       expect(error.type).toBe(CliErrorType.UNKNOWN_OPTION);
       expect(error.message).toBe('test message');
@@ -35,9 +37,28 @@ describe('CLI Errors', () => {
     });
 
     it('should have commander-compatible code property', () => {
-      const error = new CliError(CliErrorType.UNKNOWN_OPTION, 'test', 2);
+      const error = createCliError(CliErrorType.UNKNOWN_OPTION, 'test', 2);
 
       expect(error.code).toBe('cli.unknown_option');
+    });
+  });
+
+  describe('isCliError', () => {
+    it('should return true for CLI error', () => {
+      const error = createCliError(CliErrorType.UNKNOWN_OPTION, 'test', 2);
+      expect(isCliError(error)).toBe(true);
+    });
+
+    it('should return false for regular Error', () => {
+      const error = new Error('test');
+      expect(isCliError(error)).toBe(false);
+    });
+
+    it('should return false for non-error objects', () => {
+      expect(isCliError('string')).toBe(false);
+      expect(isCliError(123)).toBe(false);
+      expect(isCliError(null)).toBe(false);
+      expect(isCliError(undefined)).toBe(false);
     });
   });
 
@@ -64,7 +85,7 @@ describe('CLI Errors', () => {
   describe('handleCliError', () => {
     it('should handle unknown option error', async () => {
       const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
-      const error = new CliError(CliErrorType.UNKNOWN_OPTION, 'Unknown option', 2);
+      const error = createCliError(CliErrorType.UNKNOWN_OPTION, 'Unknown option', 2);
 
       handleCliError(error);
 
@@ -76,7 +97,7 @@ describe('CLI Errors', () => {
 
     it('should handle invalid argument error', async () => {
       const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
-      const error = new CliError(CliErrorType.INVALID_ARGUMENT, 'Invalid argument', 2);
+      const error = createCliError(CliErrorType.INVALID_ARGUMENT, 'Invalid argument', 2);
 
       handleCliError(error);
 
@@ -88,7 +109,7 @@ describe('CLI Errors', () => {
 
     it('should handle system error', async () => {
       const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
-      const error = new CliError(CliErrorType.SYSTEM_ERROR, 'System error', 1);
+      const error = createCliError(CliErrorType.SYSTEM_ERROR, 'System error', 1);
 
       handleCliError(error);
 
@@ -98,7 +119,7 @@ describe('CLI Errors', () => {
 
     it('should handle help requested (no output)', async () => {
       const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
-      const error = new CliError(CliErrorType.HELP_REQUESTED, 'Help', 0);
+      const error = createCliError(CliErrorType.HELP_REQUESTED, 'Help', 0);
 
       handleCliError(error);
 
@@ -107,11 +128,29 @@ describe('CLI Errors', () => {
 
     it('should handle version requested (no output)', async () => {
       const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
-      const error = new CliError(CliErrorType.VERSION_REQUESTED, 'Version', 0);
+      const error = createCliError(CliErrorType.VERSION_REQUESTED, 'Version', 0);
 
       handleCliError(error);
 
       expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
+    it('should handle unknown error types with default handler', async () => {
+      const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
+
+      // Create an error with an unknown type by casting to unknown then to CliErrorObject
+      const unknownError = {
+        type: 'UNKNOWN_ERROR_TYPE' as unknown as CliErrorType,
+        message: 'Unknown error',
+        exitCode: 1,
+        name: 'CliError',
+        code: 'cli.unknown_error_type',
+      } as CliErrorObject;
+
+      handleCliError(unknownError);
+
+      // The default case should call logger.error with generic message
+      expect(loggerErrorMock).toHaveBeenCalledWith('An unexpected error occurred');
     });
   });
 });

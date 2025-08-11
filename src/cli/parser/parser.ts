@@ -1,6 +1,7 @@
 import type { ParsedArgs, ParseResult, CliConfig } from './types.js';
-import { tokenize, OPTION_ALIASES } from './tokenizer.js';
+import { tokenize } from './tokenizer.js';
 import { validateTokens } from './validator.js';
+import { OPTION_ALIASES } from '../../constants/index.js';
 
 /**
  * Parse command line arguments

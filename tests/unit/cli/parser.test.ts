@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseArgs, tokenize, validateTokens } from '../../../src/cli/parser/index.js';
+import {
+  parseArgs,
+  tokenize,
+  validateTokens,
+  isValidOption,
+} from '../../../src/cli/parser/index.js';
 import type { CliConfig } from '../../../src/cli/parser/index.js';
 
 describe('CLI Parser', () => {
@@ -156,6 +161,31 @@ describe('CLI Parser', () => {
       if (result.success) {
         expect(result.data.command).toBe('help');
       }
+    });
+  });
+
+  describe('isValidOption', () => {
+    it('should return true for supported options', () => {
+      expect(isValidOption('help', mockConfig)).toBe(true);
+      expect(isValidOption('version', mockConfig)).toBe(true);
+    });
+
+    it('should return true for aliased options', () => {
+      expect(isValidOption('h', mockConfig)).toBe(true);
+      expect(isValidOption('v', mockConfig)).toBe(true);
+    });
+
+    it('should return false for unsupported options', () => {
+      expect(isValidOption('unknown', mockConfig)).toBe(false);
+      expect(isValidOption('invalid', mockConfig)).toBe(false);
+    });
+
+    it('should handle empty option string', () => {
+      expect(isValidOption('', mockConfig)).toBe(false);
+    });
+
+    it('should handle options not in aliases map', () => {
+      expect(isValidOption('custom', mockConfig)).toBe(false);
     });
   });
 });
