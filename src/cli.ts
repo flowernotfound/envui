@@ -43,16 +43,18 @@ try {
   program.parse(process.argv);
 } catch (err) {
   if (err instanceof CommanderError && err.code === 'commander.unknownOption') {
-    // Handle unknown option with custom message
     console.error(err.message);
     console.error(CLI_MESSAGES.INVALID_OPTION_HELP);
     process.exit(EXIT_CODES.INVALID_ARGUMENT);
+  } else if (
+    err instanceof CommanderError &&
+    (err.code === 'commander.version' || err.code === 'commander.helpDisplayed')
+  ) {
+    process.exit(EXIT_CODES.SUCCESS);
   } else if (err instanceof CommanderError) {
-    // Handle other Commander errors with default behavior
     console.error(err.message);
     process.exit(err.exitCode || 1);
   } else {
-    // Handle system errors with logger
     if (err instanceof Error) {
       logger.error(err.message);
     } else {

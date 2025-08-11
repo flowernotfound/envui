@@ -13,7 +13,12 @@ export function createCliProgram(): Command {
     .description('Beautiful environment variable viewer')
     .version(pkg.version)
     .addHelpText('after', CLI_MESSAGES.HELP_EXAMPLES)
-    .addHelpText('after', CLI_MESSAGES.HELP_DESCRIPTION);
+    .addHelpText('after', CLI_MESSAGES.HELP_DESCRIPTION)
+    .configureOutput({
+      outputError: () => {},
+      writeOut: (str) => process.stdout.write(str),
+      writeErr: (str) => process.stderr.write(str),
+    });
 
   return program;
 }
