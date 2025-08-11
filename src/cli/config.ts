@@ -1,24 +1,46 @@
-import { Command } from 'commander';
+import type { CliConfig } from './parser/index.js';
 import pkg from '../../package.json' with { type: 'json' };
 import { CLI_MESSAGES } from '../constants/index.js';
 
 /**
- * Create and configure Commander program with custom help messages
+ * Create CLI configuration
  */
-export function createCliProgram(): Command {
-  const program = new Command();
+export function createCliConfig(): CliConfig {
+  return {
+    name: 'envui',
+    version: pkg.version,
+    description: 'Beautiful environment variable viewer',
+    helpText: formatHelpText(),
+    supportedOptions: ['help', 'version'],
+  };
+}
 
-  program
-    .name('envui')
-    .description('Beautiful environment variable viewer')
-    .version(pkg.version)
-    .addHelpText('after', CLI_MESSAGES.HELP_EXAMPLES)
-    .addHelpText('after', CLI_MESSAGES.HELP_DESCRIPTION)
-    .configureOutput({
-      outputError: () => {},
-      writeOut: (str) => process.stdout.write(str),
-      writeErr: (str) => process.stderr.write(str),
-    });
+/**
+ * Format help text
+ */
+function formatHelpText(): string {
+  const lines = [
+    `envui v${pkg.version}`,
+    '',
+    'Beautiful environment variable viewer',
+    '',
+    'Usage:',
+    '  envui [options]',
+    '',
+    'Options:',
+    '  -h, --help     display help for command',
+    '  -v, --version  display version number',
+    '',
+    CLI_MESSAGES.HELP_EXAMPLES,
+    CLI_MESSAGES.HELP_DESCRIPTION,
+  ];
 
-  return program;
+  return lines.join('\n');
+}
+
+/**
+ * Get version text for display
+ */
+export function getVersionText(): string {
+  return pkg.version;
 }
