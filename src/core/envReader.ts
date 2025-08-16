@@ -1,4 +1,5 @@
 import type { EnvironmentData } from '../types/environment.js';
+import { wrapError } from '../utils/errorUtils.js';
 
 /**
  * Reads all environment variables from process.env
@@ -25,7 +26,6 @@ export function readEnvironmentVariables(): EnvironmentData[] {
 
     return envData;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    throw new Error(`Failed to read environment variables: ${message}`);
+    throw wrapError('Failed to read environment variables', error);
   }
 }

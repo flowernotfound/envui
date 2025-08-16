@@ -2,6 +2,7 @@ import type { EnvironmentData } from '../types/index.js';
 import { defaultConfig } from '../config/index.js';
 import { calculateColumnWidths } from '../utils/columnWidthCalculator.js';
 import { renderEnvironmentTable } from '../utils/tableRenderer.js';
+import { wrapError } from '../utils/errorUtils.js';
 
 /**
  * Creates a formatted table for environment variables
@@ -18,7 +19,6 @@ export function createEnvironmentTable(data: EnvironmentData[] = []): string {
     const widths = calculateColumnWidths(tableConfig);
     return renderEnvironmentTable(data, tableConfig, widths);
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    throw new Error(`Failed to create table: ${message}`);
+    throw wrapError('Failed to create table', error);
   }
 }

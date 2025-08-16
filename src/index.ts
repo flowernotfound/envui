@@ -2,7 +2,7 @@
 import pkg from '../package.json' with { type: 'json' };
 
 // Core functionality
-export { readEnvironmentVariables } from './core/env-reader.js';
+export { readEnvironmentVariables } from './core/envReader.js';
 export { createEnvironmentTable } from './core/table.js';
 
 // Types (only EnvironmentData is exposed as public API)

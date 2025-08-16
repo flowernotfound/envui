@@ -1,5 +1,5 @@
 import { createEnvironmentTable } from '../../core/table.js';
-import { readEnvironmentVariables } from '../../core/env-reader.js';
+import { readEnvironmentVariables } from '../../core/envReader.js';
 import { EXIT_CODES, ERROR_MESSAGES } from '../../constants/index.js';
 
 /**

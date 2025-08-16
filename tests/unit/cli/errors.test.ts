@@ -1,5 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
+  createConsoleErrorSpy,
+  createLoggerErrorMock,
+  type ConsoleErrorSpy,
+  type LoggerErrorMock,
+} from '../../utils/testHelpers.js';
+import {
   createCliError,
   isCliError,
   CliErrorType,
@@ -9,12 +15,12 @@ import {
 } from '../../../src/cli/errors/index.js';
 
 describe('CLI Errors', () => {
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-  let loggerErrorMock: ReturnType<typeof vi.fn>;
+  let consoleErrorSpy: ConsoleErrorSpy;
+  let loggerErrorMock: LoggerErrorMock;
 
   beforeEach(() => {
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    loggerErrorMock = vi.fn();
+    consoleErrorSpy = createConsoleErrorSpy();
+    loggerErrorMock = createLoggerErrorMock();
 
     vi.doMock('../../../src/utils/logger.js', () => ({
       logger: { error: loggerErrorMock },
@@ -89,8 +95,8 @@ describe('CLI Errors', () => {
 
       handleCliError(error);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Unknown option');
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(loggerErrorMock).toHaveBeenCalledWith('Unknown option');
+      expect(loggerErrorMock).toHaveBeenCalledWith(
         "\nUse 'envui --help' to see available options.",
       );
     });
@@ -101,8 +107,8 @@ describe('CLI Errors', () => {
 
       handleCliError(error);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid argument');
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(loggerErrorMock).toHaveBeenCalledWith('Invalid argument');
+      expect(loggerErrorMock).toHaveBeenCalledWith(
         "\nUse 'envui --help' to see available options.",
       );
     });
