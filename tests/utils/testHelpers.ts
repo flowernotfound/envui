@@ -12,7 +12,9 @@ export type ProcessExitMock = ReturnType<typeof createProcessExitMock>;
 /**
  * Console spy types for better type safety
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ConsoleLogSpy = MockInstance<[message?: any, ...optionalParams: any[]], void>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ConsoleErrorSpy = MockInstance<[message?: any, ...optionalParams: any[]], void>;
 
 /**

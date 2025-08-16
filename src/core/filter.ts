@@ -36,27 +36,21 @@ export function filterEnvironmentVariables(
     };
   }
 
-  // Apply prefix filter
-  if (config.type === 'prefix') {
-    const filter = createPrefixFilter(config.value);
-    const filtered = data.filter(filter);
+  // Apply prefix filter (config.type is automatically narrowed to 'prefix')
+  const filter = createPrefixFilter(config.value);
+  const filtered = data.filter(filter);
 
-    return {
+  return {
+    filtered,
+    total,
+    matchCount: filtered.length,
+    filterInfo: generateFilterMessage(config, {
       filtered,
       total,
       matchCount: filtered.length,
-      filterInfo: generateFilterMessage(config, {
-        filtered,
-        total,
-        matchCount: filtered.length,
-        filterInfo: '',
-      }),
-    };
-  }
-
-  // This line should never be reached due to exhaustive type checking
-  const _exhaustiveCheck: never = config;
-  return _exhaustiveCheck;
+      filterInfo: '',
+    }),
+  };
 }
 
 /**
@@ -71,14 +65,8 @@ export function generateFilterMessage(config: FilterConfig, result: FilterResult
     return '';
   }
 
-  // Prefix filter message
-  if (config.type === 'prefix') {
-    return CLI_MESSAGES.FILTER_INFO(config.value, result.matchCount, result.total);
-  }
-
-  // This line should never be reached due to exhaustive type checking
-  const _exhaustiveCheck: never = config;
-  return _exhaustiveCheck;
+  // Prefix filter message (config.type is automatically narrowed to 'prefix')
+  return CLI_MESSAGES.FILTER_INFO(config.value, result.matchCount, result.total);
 }
 
 /**
@@ -92,12 +80,6 @@ export function generateNoMatchMessage(config: FilterConfig): string {
     return ERROR_MESSAGES.NO_ENVIRONMENT_VARIABLES;
   }
 
-  // Specific message for prefix filter
-  if (config.type === 'prefix') {
-    return ERROR_MESSAGES.NO_MATCHING_VARIABLES(config.value);
-  }
-
-  // This line should never be reached due to exhaustive type checking
-  const _exhaustiveCheck: never = config;
-  return _exhaustiveCheck;
+  // Specific message for prefix filter (config.type is automatically narrowed to 'prefix')
+  return ERROR_MESSAGES.NO_MATCHING_VARIABLES(config.value);
 }
