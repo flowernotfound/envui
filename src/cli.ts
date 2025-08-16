@@ -12,11 +12,15 @@ import {
 /**
  * Execute command based on parsed arguments
  */
-function executeCommand(command: string, config: ReturnType<typeof createCliConfig>): void {
+function executeCommand(
+  command: string,
+  args: ReadonlyArray<string>,
+  config: ReturnType<typeof createCliConfig>,
+): void {
   const commandHandlers: Record<string, () => void> = {
     help: () => handleHelpCommand(config.helpText),
     version: () => handleVersionCommand(),
-    main: () => handleMainCommand(),
+    main: () => handleMainCommand(args),
   };
 
   const handler = commandHandlers[command];
@@ -41,7 +45,7 @@ function main(): void {
       return;
     }
 
-    executeCommand(parseResult.data.command, config);
+    executeCommand(parseResult.data.command, parseResult.data.arguments, config);
   } catch (error) {
     handleSystemError(error);
   }
