@@ -18,6 +18,7 @@ export function parseArgs(args: readonly string[], config: CliConfig): ParseResu
         command: 'main',
         options: [],
         flags: new Set(),
+        arguments: [],
         errors: [],
       },
     };
@@ -52,6 +53,7 @@ export function parseArgs(args: readonly string[], config: CliConfig): ParseResu
   // Build parse result
   const options: string[] = [];
   const flags = new Set<string>();
+  const parsedArguments: string[] = [];
   let command: ParsedArgs['command'] = 'main';
 
   // Check help flag with priority
@@ -70,6 +72,8 @@ export function parseArgs(args: readonly string[], config: CliConfig): ParseResu
 
       options.push(normalizedOption);
       flags.add(normalizedOption);
+    } else if (token.type === 'argument') {
+      parsedArguments.push(token.value);
     }
   }
 
@@ -86,6 +90,7 @@ export function parseArgs(args: readonly string[], config: CliConfig): ParseResu
       command,
       options,
       flags,
+      arguments: parsedArguments,
       errors: [],
     },
   };
