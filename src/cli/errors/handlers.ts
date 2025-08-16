@@ -8,13 +8,13 @@ import { logger } from '../../utils/logger.js';
 export function handleCliError(error: CliErrorObject): void {
   switch (error.type) {
     case CliErrorType.UNKNOWN_OPTION:
-      console.error(error.message);
-      console.error(CLI_MESSAGES.INVALID_OPTION_HELP);
+      logger.error(error.message);
+      logger.error(CLI_MESSAGES.INVALID_OPTION_HELP);
       break;
 
     case CliErrorType.INVALID_ARGUMENT:
-      console.error(error.message);
-      console.error(CLI_MESSAGES.INVALID_OPTION_HELP);
+      logger.error(error.message);
+      logger.error(CLI_MESSAGES.INVALID_OPTION_HELP);
       break;
 
     case CliErrorType.HELP_REQUESTED:

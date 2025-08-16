@@ -1,11 +1,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createCliError, isCliError, CliErrorType } from '../../../src/cli/errors/index.js';
+import {
+  createProcessExitMock,
+  createConsoleLogSpy,
+  createConsoleErrorSpy,
+  createLoggerErrorMock,
+  type ProcessExitMock,
+  type ConsoleLogSpy,
+  type ConsoleErrorSpy,
+  type LoggerErrorMock,
+} from '../../utils/testHelpers.js';
 
 describe('CLI', () => {
-  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
-  let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
-  let processExitMock: ReturnType<typeof vi.spyOn>;
+  let consoleLogSpy: ConsoleLogSpy;
+  let consoleErrorSpy: ConsoleErrorSpy;
+  let processExitMock: ProcessExitMock;
   let processArgv: string[];
+  let loggerErrorMock: LoggerErrorMock;
 
   beforeEach(() => {
     // Reset modules before each test
@@ -15,9 +26,10 @@ describe('CLI', () => {
     processArgv = process.argv;
 
     // Setup spies
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    processExitMock = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    consoleLogSpy = createConsoleLogSpy();
+    consoleErrorSpy = createConsoleErrorSpy();
+    processExitMock = createProcessExitMock();
+    loggerErrorMock = createLoggerErrorMock();
   });
 
   afterEach(() => {
@@ -32,7 +44,7 @@ describe('CLI', () => {
       process.argv = ['node', 'cli.js'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(() => [
           { key: 'NODE_ENV', value: 'test' },
           { key: 'PORT', value: '3000' },
@@ -60,7 +72,7 @@ describe('CLI', () => {
       process.argv = ['node', 'cli.js'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(() => []),
       }));
 
@@ -81,13 +93,13 @@ describe('CLI', () => {
     });
 
     it('should handle system errors gracefully', async () => {
-      const loggerErrorMock = vi.fn();
+      const localLoggerErrorMock = createLoggerErrorMock();
 
       // Set argv for main command
       process.argv = ['node', 'cli.js'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(() => {
           throw new Error('Read error');
         }),
@@ -98,25 +110,25 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: loggerErrorMock },
+        logger: { error: localLoggerErrorMock },
       }));
 
       // Import and execute CLI
       await import('../../../src/cli.js');
 
       // Verify behavior
-      expect(loggerErrorMock).toHaveBeenCalledWith('Read error');
+      expect(localLoggerErrorMock).toHaveBeenCalledWith('Read error');
       expect(processExitMock).toHaveBeenCalledWith(1);
     });
 
     it('should handle non-Error exceptions', async () => {
-      const loggerErrorMock = vi.fn();
+      const localLoggerErrorMock = createLoggerErrorMock();
 
       // Set argv for main command
       process.argv = ['node', 'cli.js'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(() => {
           throw 'string error'; // Non-Error exception
         }),
@@ -127,14 +139,14 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: loggerErrorMock },
+        logger: { error: localLoggerErrorMock },
       }));
 
       // Import and execute CLI
       await import('../../../src/cli.js');
 
       // Verify behavior
-      expect(loggerErrorMock).toHaveBeenCalledWith('An unexpected error occurred');
+      expect(localLoggerErrorMock).toHaveBeenCalledWith('An unexpected error occurred');
       expect(processExitMock).toHaveBeenCalledWith(1);
     });
   });
@@ -145,7 +157,7 @@ describe('CLI', () => {
       process.argv = ['node', 'cli.js', '--help'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
       }));
 
@@ -174,7 +186,7 @@ describe('CLI', () => {
       process.argv = ['node', 'cli.js', '-h'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
       }));
 
@@ -201,7 +213,7 @@ describe('CLI', () => {
       process.argv = ['node', 'cli.js', '--version'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
       }));
 
@@ -226,7 +238,7 @@ describe('CLI', () => {
       process.argv = ['node', 'cli.js', '-v'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
       }));
 
@@ -253,43 +265,7 @@ describe('CLI', () => {
       process.argv = ['node', 'cli.js', '--invalid'];
 
       // Mock dependencies
-      vi.doMock('../../../src/core/env-reader.js', () => ({
-        readEnvironmentVariables: vi.fn(),
-      }));
-
-      vi.doMock('../../../src/core/table.js', () => ({
-        createEnvironmentTable: vi.fn(),
-      }));
-
-      vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: vi.fn() },
-      }));
-
-      // Import CLI
-      await import('../../../src/cli.js');
-
-      // Verify error handling
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Unknown option: --invalid');
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "\nUse 'envui --help' to see available options.",
-      );
-      expect(processExitMock).toHaveBeenCalledWith(2);
-    });
-
-    it('should handle parse system errors', async () => {
-      const loggerErrorMock = vi.fn();
-
-      // Set argv
-      process.argv = ['node', 'cli.js'];
-
-      // Mock parseProcessArgs to throw
-      vi.doMock('../../../src/cli/parser/index.js', () => ({
-        parseProcessArgs: vi.fn(() => {
-          throw new Error('Parse error');
-        }),
-      }));
-
-      vi.doMock('../../../src/core/env-reader.js', () => ({
+      vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
       }));
 
@@ -305,7 +281,43 @@ describe('CLI', () => {
       await import('../../../src/cli.js');
 
       // Verify error handling
-      expect(loggerErrorMock).toHaveBeenCalledWith('Parse error');
+      expect(loggerErrorMock).toHaveBeenCalledWith('Unknown option: --invalid');
+      expect(loggerErrorMock).toHaveBeenCalledWith(
+        "\nUse 'envui --help' to see available options.",
+      );
+      expect(processExitMock).toHaveBeenCalledWith(2);
+    });
+
+    it('should handle parse system errors', async () => {
+      const localLoggerErrorMock = createLoggerErrorMock();
+
+      // Set argv
+      process.argv = ['node', 'cli.js'];
+
+      // Mock parseProcessArgs to throw
+      vi.doMock('../../../src/cli/parser/index.js', () => ({
+        parseProcessArgs: vi.fn(() => {
+          throw new Error('Parse error');
+        }),
+      }));
+
+      vi.doMock('../../../src/core/envReader.js', () => ({
+        readEnvironmentVariables: vi.fn(),
+      }));
+
+      vi.doMock('../../../src/core/table.js', () => ({
+        createEnvironmentTable: vi.fn(),
+      }));
+
+      vi.doMock('../../../src/utils/logger.js', () => ({
+        logger: { error: localLoggerErrorMock },
+      }));
+
+      // Import CLI
+      await import('../../../src/cli.js');
+
+      // Verify error handling
+      expect(localLoggerErrorMock).toHaveBeenCalledWith('Parse error');
       expect(processExitMock).toHaveBeenCalledWith(1);
     });
   });

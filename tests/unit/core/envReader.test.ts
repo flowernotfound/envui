@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { readEnvironmentVariables } from '../../../src/core/env-reader.js';
+import { readEnvironmentVariables } from '../../../src/core/envReader.js';
 
 describe('readEnvironmentVariables - Basic Functionality', () => {
   afterEach(() => {
