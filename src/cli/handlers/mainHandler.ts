@@ -42,7 +42,7 @@ export function handleMainCommand(args?: ReadonlyArray<string>): void {
 
   // Handle no matches
   if (filterResult.matchCount === 0) {
-    if (filterConfig.type === 'prefix' && filterConfig.value) {
+    if (filterConfig.type === 'prefix') {
       // Show filter info even when no matches
       console.log(filterResult.filterInfo);
     }
