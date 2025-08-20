@@ -14,6 +14,7 @@ export interface ParsedArgs {
   readonly command: 'main' | 'help' | 'version';
   readonly options: ReadonlyArray<string>;
   readonly flags: ReadonlySet<string>;
+  readonly arguments: ReadonlyArray<string>;
   readonly errors: ReadonlyArray<ParseError>;
 }
 
