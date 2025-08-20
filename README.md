@@ -18,14 +18,19 @@ pnpm build
 ## Usage
 
 ```bash
+# Display all environment variables
+./dist/cli.js
+
+# Filter by prefix (case-insensitive)
+./dist/cli.js VITE_
+./dist/cli.js NODE_
+./dist/cli.js PATH
+
 # Display help
 ./dist/cli.js --help
 
 # Show version
 ./dist/cli.js --version
-
-# Run the application
-./dist/cli.js
 ```
 
 ## Development
