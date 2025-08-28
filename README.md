@@ -21,10 +21,13 @@ pnpm build
 # Display all environment variables
 ./dist/cli.js
 
-# Filter by prefix (case-insensitive)
+# Prefix filtering (case-insensitive)
 ./dist/cli.js VITE_
 ./dist/cli.js NODE_
-./dist/cli.js PATH
+
+# Filter by partial match (case-insensitive)
+./dist/cli.js --filter API
+./dist/cli.js --filter database
 
 # Display help
 ./dist/cli.js --help
