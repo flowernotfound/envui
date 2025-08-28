@@ -1,5 +1,5 @@
 export const logger = {
-  // === 開発・デバッグ用ログ ===
+  // === Development and debug logging ===
   debug: (message: string): void => {
     console.log(`[DEBUG] ${message}`);
   },
@@ -16,7 +16,7 @@ export const logger = {
     console.error(`[ERROR] ${message}`);
   },
 
-  // === ユーザー向け出力 ===
+  // === User-facing output ===
   userError: (message: string, options?: { usage?: string; hint?: string }): void => {
     console.error(`Error: ${message}`);
     if (options?.usage) {
