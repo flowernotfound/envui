@@ -3,6 +3,7 @@ import type { EnvironmentData } from '../../../src/types/environment.js';
 import type { FilterConfig, FilterResult } from '../../../src/types/environment.js';
 import {
   createPrefixFilter,
+  createPartialMatchFilter,
   filterEnvironmentVariables,
   generateFilterMessage,
   generateNoMatchMessage,
@@ -190,6 +191,125 @@ describe('Prefix Filter', () => {
       const message = generateNoMatchMessage(config);
 
       expect(message).toBe("No environment variables found matching ''");
+    });
+  });
+
+  describe('Partial Match Filter', () => {
+    describe('createPartialMatchFilter', () => {
+      it('should create a filter function that matches partial text case-insensitively', () => {
+        const filter = createPartialMatchFilter('API');
+
+        expect(filter({ key: 'VITE_API_URL', value: 'test' })).toBe(true);
+        expect(filter({ key: 'API_KEY', value: 'test' })).toBe(true);
+        expect(filter({ key: 'MY_API_TOKEN', value: 'test' })).toBe(true);
+        expect(filter({ key: 'NODE_ENV', value: 'test' })).toBe(false);
+      });
+
+      it('should handle lowercase search input', () => {
+        const filter = createPartialMatchFilter('api');
+
+        expect(filter({ key: 'VITE_API_URL', value: 'test' })).toBe(true);
+        expect(filter({ key: 'API_KEY', value: 'test' })).toBe(true);
+        expect(filter({ key: 'MY_API_TOKEN', value: 'test' })).toBe(true);
+      });
+
+      it('should handle empty search text', () => {
+        const filter = createPartialMatchFilter('');
+
+        expect(filter({ key: 'VITE_API_URL', value: 'test' })).toBe(true);
+        expect(filter({ key: 'NODE_ENV', value: 'test' })).toBe(true);
+        expect(filter({ key: '', value: 'test' })).toBe(true);
+      });
+
+      it('should handle special characters in search text', () => {
+        const filter = createPartialMatchFilter('_API');
+
+        expect(filter({ key: 'VITE_API_URL', value: 'test' })).toBe(true);
+        expect(filter({ key: 'MY_API_KEY', value: 'test' })).toBe(true);
+        expect(filter({ key: 'API_TOKEN', value: 'test' })).toBe(false);
+      });
+
+      it('should handle spaces in search text', () => {
+        const filter = createPartialMatchFilter(' VAR');
+
+        expect(filter({ key: 'MY VAR_TEST', value: 'test' })).toBe(true);
+        expect(filter({ key: 'EMPTY_VAR', value: 'test' })).toBe(false);
+      });
+    });
+
+    describe('filterEnvironmentVariables with partial match', () => {
+      it('should filter variables by partial match', () => {
+        const config: FilterConfig = { type: 'partial', value: 'API' };
+        const result = filterEnvironmentVariables(mockEnvData, config);
+
+        expect(result.filtered).toHaveLength(2);
+        expect(result.filtered.every((env) => env.key.includes('API'))).toBe(true);
+        expect(result.total).toBe(8);
+        expect(result.matchCount).toBe(2);
+      });
+
+      it('should handle case-insensitive partial match', () => {
+        const config: FilterConfig = { type: 'partial', value: 'env' };
+        const result = filterEnvironmentVariables(mockEnvData, config);
+
+        expect(result.filtered).toHaveLength(1);
+        expect(result.filtered[0]?.key).toBe('NODE_ENV');
+      });
+
+      it('should return empty array when no partial matches found', () => {
+        const config: FilterConfig = { type: 'partial', value: 'MISSING' };
+        const result = filterEnvironmentVariables(mockEnvData, config);
+
+        expect(result.filtered).toHaveLength(0);
+        expect(result.total).toBe(8);
+        expect(result.matchCount).toBe(0);
+      });
+
+      it('should handle partial match at different positions', () => {
+        const config: FilterConfig = { type: 'partial', value: 'NODE' };
+        const result = filterEnvironmentVariables(mockEnvData, config);
+
+        expect(result.filtered).toHaveLength(2);
+        expect(result.filtered.some((env) => env.key === 'NODE_ENV')).toBe(true);
+        expect(result.filtered.some((env) => env.key === 'NODE_OPTIONS')).toBe(true);
+      });
+    });
+
+    describe('generateFilterMessage with partial match', () => {
+      it('should generate correct filter info message for partial match filter', () => {
+        const config: FilterConfig = { type: 'partial', value: 'API' };
+        const result: FilterResult = {
+          filtered: [],
+          total: 150,
+          matchCount: 5,
+          filterInfo: '',
+        };
+
+        const message = generateFilterMessage(config, result);
+        expect(message).toBe("Filter: Variables containing 'API' (5 of 150 displayed)");
+      });
+
+      it('should handle 0 matches correctly for partial match', () => {
+        const config: FilterConfig = { type: 'partial', value: 'MISSING' };
+        const result: FilterResult = {
+          filtered: [],
+          total: 150,
+          matchCount: 0,
+          filterInfo: '',
+        };
+
+        const message = generateFilterMessage(config, result);
+        expect(message).toBe("Filter: Variables containing 'MISSING' (0 of 150 displayed)");
+      });
+    });
+
+    describe('generateNoMatchMessage with partial match', () => {
+      it('should generate correct no match message for partial match filter', () => {
+        const config: FilterConfig = { type: 'partial', value: 'MISSING' };
+        const message = generateNoMatchMessage(config);
+
+        expect(message).toBe("No environment variables found matching 'MISSING'");
+      });
     });
   });
 

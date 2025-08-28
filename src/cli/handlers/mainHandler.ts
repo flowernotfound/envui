@@ -4,6 +4,7 @@ import { filterEnvironmentVariables, generateNoMatchMessage } from '../../core/f
 import type { FilterConfig } from '../../types/environment.js';
 import type { ParsedArgs } from '../parser/types.js';
 import { EXIT_CODES, ERROR_MESSAGES } from '../../constants/index.js';
+import { logger } from '../../utils/logger.js';
 
 /**
  * Create filter configuration from parsed arguments
@@ -13,10 +14,10 @@ function createFilterConfig(parsedArgs: ParsedArgs): FilterConfig {
   if (parsedArgs.filterValue) {
     // Check for conflict with prefix filter
     if (parsedArgs.arguments.length > 0) {
-      console.error('Error: Cannot use prefix filter and --filter option together');
-      console.error('Usage:');
-      console.error('  envui [PREFIX]        # Filter by prefix');
-      console.error('  envui --filter TEXT   # Filter by partial match');
+      logger.userError('cannot use prefix filter and --filter option together', {
+        usage:
+          '  envui [PREFIX]        # Filter by prefix\n  envui --filter TEXT   # Filter by partial match',
+      });
       process.exit(EXIT_CODES.INVALID_ARGUMENT);
     }
 
@@ -43,7 +44,7 @@ export function handleMainCommand(args?: ReadonlyArray<string>, parsedArgs?: Par
 
   // Handle case when no environment variables found
   if (environmentData.length === 0) {
-    console.log(ERROR_MESSAGES.NO_ENVIRONMENT_VARIABLES);
+    logger.userInfo(ERROR_MESSAGES.NO_ENVIRONMENT_VARIABLES);
     process.exit(EXIT_CODES.DATA_NOT_FOUND);
   }
 
@@ -66,20 +67,20 @@ export function handleMainCommand(args?: ReadonlyArray<string>, parsedArgs?: Par
   if (filterResult.matchCount === 0) {
     if (filterConfig.type !== 'none') {
       // Show filter info even when no matches
-      console.log(filterResult.filterInfo);
+      logger.userInfo(filterResult.filterInfo);
     }
-    console.log(generateNoMatchMessage(filterConfig));
+    logger.userInfo(generateNoMatchMessage(filterConfig));
     process.exit(EXIT_CODES.DATA_NOT_FOUND);
   }
 
   // Display filter info if filter is applied
   if (filterResult.filterInfo) {
-    console.log(filterResult.filterInfo);
-    console.log(); // Empty line after filter info
+    logger.userInfo(filterResult.filterInfo);
+    logger.userInfo(''); // Empty line after filter info
   }
 
   // Display table
   const table = createEnvironmentTable(filterResult.filtered);
-  console.log(table);
+  logger.userInfo(table);
   process.exit(EXIT_CODES.SUCCESS);
 }

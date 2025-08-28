@@ -8,13 +8,19 @@ import { logger } from '../../utils/logger.js';
 export function handleCliError(error: CliErrorObject): void {
   switch (error.type) {
     case CliErrorType.UNKNOWN_OPTION:
-      logger.error(error.message);
-      logger.error(CLI_MESSAGES.INVALID_OPTION_HELP);
+      logger.userError(error.message, { hint: CLI_MESSAGES.INVALID_OPTION_HELP });
       break;
 
     case CliErrorType.INVALID_ARGUMENT:
-      logger.error(error.message);
-      logger.error(CLI_MESSAGES.INVALID_OPTION_HELP);
+      // For --filter errors, show detailed usage; for others, show hint
+      if (error.message.includes('--filter')) {
+        logger.userError(error.message, {
+          usage:
+            '  envui [PREFIX]        # Filter by prefix\n  envui --filter TEXT   # Filter by partial match',
+        });
+      } else {
+        logger.userError(error.message, { hint: CLI_MESSAGES.INVALID_OPTION_HELP });
+      }
       break;
 
     case CliErrorType.HELP_REQUESTED:
@@ -26,11 +32,11 @@ export function handleCliError(error: CliErrorObject): void {
       break;
 
     case CliErrorType.SYSTEM_ERROR:
-      logger.error(error.message);
+      logger.userError(error.message);
       break;
 
     default:
-      logger.error('An unexpected error occurred');
+      logger.userError('An unexpected error occurred');
   }
 }
 
@@ -40,7 +46,7 @@ export function handleCliError(error: CliErrorObject): void {
 export function createUnknownOptionError(option: string): CliErrorObject {
   return createCliError(
     CliErrorType.UNKNOWN_OPTION,
-    `error: unknown option '${option}'`,
+    `unknown option '${option}'`,
     EXIT_CODES.INVALID_ARGUMENT,
   );
 }

@@ -5,10 +5,12 @@ import {
   createConsoleLogSpy,
   createConsoleErrorSpy,
   createLoggerErrorMock,
+  createLoggerUserErrorMock,
   type ProcessExitMock,
   type ConsoleLogSpy,
   type ConsoleErrorSpy,
   type LoggerErrorMock,
+  type LoggerUserErrorMock,
 } from '../../utils/testHelpers.js';
 
 describe('CLI', () => {
@@ -17,6 +19,8 @@ describe('CLI', () => {
   let processExitMock: ProcessExitMock;
   let processArgv: string[];
   let loggerErrorMock: LoggerErrorMock;
+  let loggerUserErrorMock: LoggerUserErrorMock;
+  let loggerUserInfoMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     // Reset modules before each test
@@ -30,6 +34,8 @@ describe('CLI', () => {
     consoleErrorSpy = createConsoleErrorSpy();
     processExitMock = createProcessExitMock();
     loggerErrorMock = createLoggerErrorMock();
+    loggerUserErrorMock = createLoggerUserErrorMock();
+    loggerUserInfoMock = vi.fn();
   });
 
   afterEach(() => {
@@ -56,14 +62,18 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: vi.fn() },
+        logger: {
+          error: loggerErrorMock,
+          userError: loggerUserErrorMock,
+          userInfo: loggerUserInfoMock,
+        },
       }));
 
       // Import and execute CLI
       await import('../../../src/cli.js');
 
       // Verify behavior
-      expect(consoleLogSpy).toHaveBeenCalledWith('mocked table output');
+      expect(loggerUserInfoMock).toHaveBeenCalledWith('mocked table output');
       expect(processExitMock).toHaveBeenCalledWith(0);
     });
 
@@ -81,14 +91,18 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: vi.fn() },
+        logger: {
+          error: loggerErrorMock,
+          userError: loggerUserErrorMock,
+          userInfo: loggerUserInfoMock,
+        },
       }));
 
       // Import and execute CLI
       await import('../../../src/cli.js');
 
       // Verify behavior
-      expect(consoleLogSpy).toHaveBeenCalledWith('No environment variables found');
+      expect(loggerUserInfoMock).toHaveBeenCalledWith('No environment variables found');
       expect(processExitMock).toHaveBeenCalledWith(2);
     });
 
@@ -110,7 +124,11 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: localLoggerErrorMock },
+        logger: {
+          error: localLoggerErrorMock,
+          userError: vi.fn(),
+          userInfo: vi.fn(),
+        },
       }));
 
       // Import and execute CLI
@@ -139,7 +157,11 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: localLoggerErrorMock },
+        logger: {
+          error: localLoggerErrorMock,
+          userError: vi.fn(),
+          userInfo: vi.fn(),
+        },
       }));
 
       // Import and execute CLI
@@ -166,7 +188,11 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: vi.fn() },
+        logger: {
+          error: vi.fn(),
+          userError: vi.fn(),
+          userInfo: vi.fn(),
+        },
       }));
 
       // Import and execute CLI
@@ -195,7 +221,11 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: vi.fn() },
+        logger: {
+          error: vi.fn(),
+          userError: vi.fn(),
+          userInfo: vi.fn(),
+        },
       }));
 
       // Import and execute CLI
@@ -222,7 +252,11 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: vi.fn() },
+        logger: {
+          error: vi.fn(),
+          userError: vi.fn(),
+          userInfo: vi.fn(),
+        },
       }));
 
       // Import and execute CLI
@@ -247,7 +281,11 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: vi.fn() },
+        logger: {
+          error: vi.fn(),
+          userError: vi.fn(),
+          userInfo: vi.fn(),
+        },
       }));
 
       // Import and execute CLI
@@ -274,17 +312,20 @@ describe('CLI', () => {
       }));
 
       vi.doMock('../../../src/utils/logger.js', () => ({
-        logger: { error: loggerErrorMock },
+        logger: {
+          error: loggerErrorMock,
+          userError: loggerUserErrorMock,
+          userInfo: vi.fn(),
+        },
       }));
 
       // Import CLI
       await import('../../../src/cli.js');
 
       // Verify error handling
-      expect(loggerErrorMock).toHaveBeenCalledWith('Unknown option: --invalid');
-      expect(loggerErrorMock).toHaveBeenCalledWith(
-        "\nUse 'envui --help' to see available options.",
-      );
+      expect(loggerUserErrorMock).toHaveBeenCalledWith('Unknown option: --invalid', {
+        hint: "Try 'envui --help' for more information.",
+      });
       expect(processExitMock).toHaveBeenCalledWith(2);
     });
 

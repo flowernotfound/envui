@@ -6,7 +6,7 @@ export const CLI_MESSAGES = {
     "\nExamples:\n  envui              Display all environment variables\n  envui PREFIX       Display variables starting with PREFIX\n  envui --filter API Display variables containing 'API'",
   HELP_DESCRIPTION:
     '\nDescription:\n  envui is a modern alternative to printenv that displays environment \n  variables in a clean, colorized table format for better readability.',
-  INVALID_OPTION_HELP: "\nUse 'envui --help' to see available options.",
+  INVALID_OPTION_HELP: "Try 'envui --help' for more information.",
   FILTER_INFO: (prefix: string, count: number, total: number) =>
     `Filter: Variables starting with '${prefix}' (${count} of ${total} displayed)`,
   FILTER_INFO_PARTIAL: (searchText: string, count: number, total: number) =>
