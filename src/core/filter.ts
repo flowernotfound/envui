@@ -15,6 +15,19 @@ export function createPrefixFilter(prefix: string): (env: EnvironmentData) => bo
 }
 
 /**
+ * Creates a filter function that matches environment variables by partial match
+ * @param searchText - The text to search for (case-insensitive)
+ * @returns A filter function that checks if a variable contains the search text
+ */
+export function createPartialMatchFilter(searchText: string): (env: EnvironmentData) => boolean {
+  const lowerSearchText = searchText.toLowerCase();
+
+  return (env: EnvironmentData): boolean => {
+    return env.key.toLowerCase().includes(lowerSearchText);
+  };
+}
+
+/**
  * Filters environment variables based on the provided configuration
  * @param data - Array of environment variables
  * @param config - Filter configuration
@@ -36,8 +49,16 @@ export function filterEnvironmentVariables(
     };
   }
 
-  // Apply prefix filter (config.type is automatically narrowed to 'prefix')
-  const filter = createPrefixFilter(config.value);
+  // Apply appropriate filter based on type
+  let filter: (env: EnvironmentData) => boolean;
+
+  if (config.type === 'prefix') {
+    filter = createPrefixFilter(config.value);
+  } else {
+    // config.type === 'partial'
+    filter = createPartialMatchFilter(config.value);
+  }
+
   const filtered = data.filter(filter);
 
   return {
@@ -65,8 +86,13 @@ export function generateFilterMessage(config: FilterConfig, result: FilterResult
     return '';
   }
 
-  // Prefix filter message (config.type is automatically narrowed to 'prefix')
-  return CLI_MESSAGES.FILTER_INFO(config.value, result.matchCount, result.total);
+  // Generate appropriate message based on filter type
+  if (config.type === 'prefix') {
+    return CLI_MESSAGES.FILTER_INFO(config.value, result.matchCount, result.total);
+  } else {
+    // config.type === 'partial'
+    return CLI_MESSAGES.FILTER_INFO_PARTIAL(config.value, result.matchCount, result.total);
+  }
 }
 
 /**
@@ -80,6 +106,6 @@ export function generateNoMatchMessage(config: FilterConfig): string {
     return ERROR_MESSAGES.NO_ENVIRONMENT_VARIABLES;
   }
 
-  // Specific message for prefix filter (config.type is automatically narrowed to 'prefix')
+  // Specific message for filter types
   return ERROR_MESSAGES.NO_MATCHING_VARIABLES(config.value);
 }

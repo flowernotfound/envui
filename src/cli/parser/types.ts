@@ -2,7 +2,7 @@
  * Type definition for CLI parsing error (for parser internal use)
  */
 export interface ParseError {
-  readonly type: 'unknown_option' | 'invalid_argument' | 'system_error';
+  readonly type: 'unknown_option' | 'invalid_argument' | 'system_error' | 'filter_requires_value';
   readonly message: string;
   readonly code: number;
 }
@@ -16,6 +16,7 @@ export interface ParsedArgs {
   readonly flags: ReadonlySet<string>;
   readonly arguments: ReadonlyArray<string>;
   readonly errors: ReadonlyArray<ParseError>;
+  readonly filterValue?: string;
 }
 
 /**

@@ -10,13 +10,17 @@ export function handleParseError(parseError: {
   message: string;
   code: number;
 }): void {
-  const error = createCliError(
-    parseError.type === 'unknown_option'
-      ? CliErrorType.UNKNOWN_OPTION
-      : CliErrorType.INVALID_ARGUMENT,
-    parseError.message,
-    parseError.code,
-  );
+  let errorType: CliErrorType;
+
+  if (parseError.type === 'unknown_option') {
+    errorType = CliErrorType.UNKNOWN_OPTION;
+  } else if (parseError.type === 'filter_requires_value') {
+    errorType = CliErrorType.INVALID_ARGUMENT;
+  } else {
+    errorType = CliErrorType.INVALID_ARGUMENT;
+  }
+
+  const error = createCliError(errorType, parseError.message, parseError.code);
   handleCliError(error);
   process.exit(error.exitCode);
 }

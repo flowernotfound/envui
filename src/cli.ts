@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { parseProcessArgs } from './cli/parser/index.js';
+import type { ParsedArgs } from './cli/parser/types.js';
 import { handleParseError, handleSystemError } from './cli/errors/index.js';
 import { createCliConfig } from './cli/config.js';
 import {
@@ -12,18 +13,14 @@ import {
 /**
  * Execute command based on parsed arguments
  */
-function executeCommand(
-  command: string,
-  args: ReadonlyArray<string>,
-  config: ReturnType<typeof createCliConfig>,
-): void {
+function executeCommand(parsedArgs: ParsedArgs, config: ReturnType<typeof createCliConfig>): void {
   const commandHandlers: Record<string, () => void> = {
     help: () => handleHelpCommand(config.helpText),
     version: () => handleVersionCommand(),
-    main: () => handleMainCommand(args),
+    main: () => handleMainCommand(parsedArgs.arguments, parsedArgs),
   };
 
-  const handler = commandHandlers[command];
+  const handler = commandHandlers[parsedArgs.command];
   if (handler) {
     handler();
   } else {
@@ -45,7 +42,7 @@ function main(): void {
       return;
     }
 
-    executeCommand(parseResult.data.command, parseResult.data.arguments, config);
+    executeCommand(parseResult.data, config);
   } catch (error) {
     handleSystemError(error);
   }
