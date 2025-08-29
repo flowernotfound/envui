@@ -105,7 +105,7 @@ export function parseArgs(args: readonly string[], config: CliConfig): ParseResu
           };
         }
 
-        filterValue = nextToken.value;
+        filterValue = value;
         skipNext = true;
       }
 

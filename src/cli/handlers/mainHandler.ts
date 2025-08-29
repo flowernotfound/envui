@@ -28,7 +28,7 @@ function createFilterConfig(parsedArgs: ParsedArgs): FilterConfig {
   if (parsedArgs.arguments.length > 0) {
     const prefix = parsedArgs.arguments[0];
     if (prefix && prefix.trim() !== '') {
-      return { type: 'prefix', value: prefix };
+      return { type: 'prefix', value: prefix.trim() };
     }
   }
 

@@ -205,6 +205,15 @@ describe('CLI Parser', () => {
       }
     });
 
+    it('should trim whitespace from --filter value', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter', '  API  '], mockConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.filterValue).toBe('API');
+      }
+    });
+
     it('should parse --filter with special characters', () => {
       const result = parseArgs(['node', 'cli.js', '--filter', '_API_'], mockConfig);
 
