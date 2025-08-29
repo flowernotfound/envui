@@ -5,6 +5,7 @@ import type { FilterConfig } from '../../types/environment.js';
 import type { ParsedArgs } from '../parser/types.js';
 import { EXIT_CODES, ERROR_MESSAGES } from '../../constants/index.js';
 import { logger } from '../../utils/logger.js';
+import { createCliError, CliErrorType } from '../errors/types.js';
 
 /**
  * Create filter configuration from parsed arguments
@@ -14,11 +15,11 @@ function createFilterConfig(parsedArgs: ParsedArgs): FilterConfig {
   if (parsedArgs.filterValue) {
     // Check for conflict with prefix filter
     if (parsedArgs.arguments.length > 0) {
-      logger.userError('cannot use prefix filter and --filter option together', {
-        usage:
-          '  envui [PREFIX]        # Filter by prefix\n  envui --filter TEXT   # Filter by partial match',
-      });
-      process.exit(EXIT_CODES.INVALID_ARGUMENT);
+      throw createCliError(
+        CliErrorType.FILTER_CONFLICT,
+        'cannot use prefix filter and --filter option together',
+        EXIT_CODES.INVALID_ARGUMENT,
+      );
     }
 
     return { type: 'partial', value: parsedArgs.filterValue };
@@ -44,8 +45,11 @@ export function handleMainCommand(args?: ReadonlyArray<string>, parsedArgs?: Par
 
   // Handle case when no environment variables found
   if (environmentData.length === 0) {
-    logger.userInfo(ERROR_MESSAGES.NO_ENVIRONMENT_VARIABLES);
-    process.exit(EXIT_CODES.DATA_NOT_FOUND);
+    throw createCliError(
+      CliErrorType.NO_DATA_FOUND,
+      ERROR_MESSAGES.NO_ENVIRONMENT_VARIABLES,
+      EXIT_CODES.DATA_NOT_FOUND,
+    );
   }
 
   // Create filter configuration
@@ -65,12 +69,11 @@ export function handleMainCommand(args?: ReadonlyArray<string>, parsedArgs?: Par
 
   // Handle no matches
   if (filterResult.matchCount === 0) {
-    if (filterConfig.type !== 'none') {
-      // Show filter info even when no matches
-      logger.userInfo(filterResult.filterInfo);
+    let message = generateNoMatchMessage(filterConfig);
+    if (filterConfig.type !== 'none' && filterResult.filterInfo) {
+      message = `${filterResult.filterInfo}\n${message}`;
     }
-    logger.userInfo(generateNoMatchMessage(filterConfig));
-    process.exit(EXIT_CODES.DATA_NOT_FOUND);
+    throw createCliError(CliErrorType.NO_DATA_FOUND, message, EXIT_CODES.DATA_NOT_FOUND);
   }
 
   // Display filter info if filter is applied
@@ -81,6 +84,5 @@ export function handleMainCommand(args?: ReadonlyArray<string>, parsedArgs?: Par
 
   // Display table
   const table = createEnvironmentTable(filterResult.filtered);
-  logger.userInfo(table);
-  process.exit(EXIT_CODES.SUCCESS);
+  throw createCliError(CliErrorType.SUCCESS_EXIT, table, EXIT_CODES.SUCCESS);
 }

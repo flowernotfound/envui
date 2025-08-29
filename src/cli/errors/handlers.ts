@@ -31,6 +31,21 @@ export function handleCliError(error: CliErrorObject): void {
       // Version display handled in main logic
       break;
 
+    case CliErrorType.FILTER_CONFLICT:
+      logger.userError(error.message, {
+        usage:
+          '  envui [PREFIX]        # Filter by prefix\n  envui --filter TEXT   # Filter by partial match',
+      });
+      break;
+
+    case CliErrorType.NO_DATA_FOUND:
+      logger.userInfo(error.message);
+      break;
+
+    case CliErrorType.SUCCESS_EXIT:
+      logger.userInfo(error.message);
+      break;
+
     case CliErrorType.SYSTEM_ERROR:
       logger.userError(error.message);
       break;

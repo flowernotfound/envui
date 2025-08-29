@@ -2,19 +2,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createCliError, isCliError, CliErrorType } from '../../../src/cli/errors/index.js';
 import {
   createProcessExitMock,
-  createConsoleLogSpy,
   createConsoleErrorSpy,
   createLoggerErrorMock,
   createLoggerUserErrorMock,
   type ProcessExitMock,
-  type ConsoleLogSpy,
   type ConsoleErrorSpy,
   type LoggerErrorMock,
   type LoggerUserErrorMock,
 } from '../../utils/testHelpers.js';
 
 describe('CLI', () => {
-  let consoleLogSpy: ConsoleLogSpy;
   let consoleErrorSpy: ConsoleErrorSpy;
   let processExitMock: ProcessExitMock;
   let processArgv: string[];
@@ -30,7 +27,6 @@ describe('CLI', () => {
     processArgv = process.argv;
 
     // Setup spies
-    consoleLogSpy = createConsoleLogSpy();
     consoleErrorSpy = createConsoleErrorSpy();
     processExitMock = createProcessExitMock();
     loggerErrorMock = createLoggerErrorMock();
@@ -178,6 +174,8 @@ describe('CLI', () => {
       // Set argv with --help
       process.argv = ['node', 'cli.js', '--help'];
 
+      const localLoggerUserInfoMock = vi.fn();
+
       // Mock dependencies
       vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
@@ -191,16 +189,16 @@ describe('CLI', () => {
         logger: {
           error: vi.fn(),
           userError: vi.fn(),
-          userInfo: vi.fn(),
+          userInfo: localLoggerUserInfoMock,
         },
       }));
 
       // Import and execute CLI
       await import('../../../src/cli.js');
 
-      // Verify help is displayed
-      expect(consoleLogSpy).toHaveBeenCalled();
-      const helpOutput = consoleLogSpy.mock.calls[0][0];
+      // Verify help is displayed through userInfo
+      expect(localLoggerUserInfoMock).toHaveBeenCalled();
+      const helpOutput = localLoggerUserInfoMock.mock.calls[0][0];
       expect(helpOutput).toContain('envui');
       expect(helpOutput).toContain('Beautiful environment variable viewer');
       expect(helpOutput).toContain('--help');
@@ -211,6 +209,8 @@ describe('CLI', () => {
       // Set argv with -h
       process.argv = ['node', 'cli.js', '-h'];
 
+      const localLoggerUserInfoMock = vi.fn();
+
       // Mock dependencies
       vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
@@ -224,16 +224,16 @@ describe('CLI', () => {
         logger: {
           error: vi.fn(),
           userError: vi.fn(),
-          userInfo: vi.fn(),
+          userInfo: localLoggerUserInfoMock,
         },
       }));
 
       // Import and execute CLI
       await import('../../../src/cli.js');
 
-      // Verify help is displayed
-      expect(consoleLogSpy).toHaveBeenCalled();
-      const helpOutput = consoleLogSpy.mock.calls[0][0];
+      // Verify help is displayed through userInfo
+      expect(localLoggerUserInfoMock).toHaveBeenCalled();
+      const helpOutput = localLoggerUserInfoMock.mock.calls[0][0];
       expect(helpOutput).toContain('envui');
       expect(processExitMock).toHaveBeenCalledWith(0);
     });
@@ -242,6 +242,8 @@ describe('CLI', () => {
       // Set argv with --version
       process.argv = ['node', 'cli.js', '--version'];
 
+      const localLoggerUserInfoMock = vi.fn();
+
       // Mock dependencies
       vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
@@ -255,15 +257,15 @@ describe('CLI', () => {
         logger: {
           error: vi.fn(),
           userError: vi.fn(),
-          userInfo: vi.fn(),
+          userInfo: localLoggerUserInfoMock,
         },
       }));
 
       // Import and execute CLI
       await import('../../../src/cli.js');
 
-      // Verify version is displayed
-      expect(consoleLogSpy).toHaveBeenCalled();
+      // Verify version is displayed through userInfo
+      expect(localLoggerUserInfoMock).toHaveBeenCalled();
       expect(processExitMock).toHaveBeenCalledWith(0);
     });
 
@@ -271,6 +273,8 @@ describe('CLI', () => {
       // Set argv with -v
       process.argv = ['node', 'cli.js', '-v'];
 
+      const localLoggerUserInfoMock = vi.fn();
+
       // Mock dependencies
       vi.doMock('../../../src/core/envReader.js', () => ({
         readEnvironmentVariables: vi.fn(),
@@ -284,15 +288,15 @@ describe('CLI', () => {
         logger: {
           error: vi.fn(),
           userError: vi.fn(),
-          userInfo: vi.fn(),
+          userInfo: localLoggerUserInfoMock,
         },
       }));
 
       // Import and execute CLI
       await import('../../../src/cli.js');
 
-      // Verify version is displayed
-      expect(consoleLogSpy).toHaveBeenCalled();
+      // Verify version is displayed through userInfo
+      expect(localLoggerUserInfoMock).toHaveBeenCalled();
       expect(processExitMock).toHaveBeenCalledWith(0);
     });
   });
