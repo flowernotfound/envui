@@ -13,7 +13,7 @@ describe('CLI Parser', () => {
     version: '0.1.0',
     description: 'Test description',
     helpText: 'Test help',
-    supportedOptions: ['help', 'version'],
+    supportedOptions: ['help', 'version', 'filter'],
   };
 
   describe('tokenize', () => {
@@ -160,6 +160,85 @@ describe('CLI Parser', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.command).toBe('help');
+      }
+    });
+
+    it('should parse --filter option with value', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter', 'API'], mockConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.command).toBe('main');
+        expect(result.data.flags.has('filter')).toBe(true);
+        expect(result.data.filterValue).toBe('API');
+        expect(result.data.arguments).toEqual([]);
+      }
+    });
+
+    it('should handle --filter without value', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter'], mockConfig);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.type).toBe('filter_requires_value');
+        expect(result.error.message).toBe('--filter option requires a search text');
+      }
+    });
+
+    it('should handle --filter with empty string value', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter', ''], mockConfig);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.type).toBe('filter_requires_value');
+        expect(result.error.message).toBe('--filter option requires a search text');
+      }
+    });
+
+    it('should handle --filter with whitespace only value', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter', '   '], mockConfig);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.type).toBe('filter_requires_value');
+        expect(result.error.message).toBe('--filter option requires a search text');
+      }
+    });
+
+    it('should trim whitespace from --filter value', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter', '  API  '], mockConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.filterValue).toBe('API');
+      }
+    });
+
+    it('should parse --filter with special characters', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter', '_API_'], mockConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.filterValue).toBe('_API_');
+      }
+    });
+
+    it('should parse --filter with case-insensitive value', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter', 'api'], mockConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.filterValue).toBe('api');
+      }
+    });
+
+    it('should not consume prefix argument when --filter is used', () => {
+      const result = parseArgs(['node', 'cli.js', '--filter', 'API', 'PREFIX'], mockConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.filterValue).toBe('API');
+        expect(result.data.arguments).toEqual(['PREFIX']);
       }
     });
   });

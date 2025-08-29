@@ -21,6 +21,9 @@ export type ConsoleErrorSpy = MockInstance<[message?: any, ...optionalParams: an
  * Mock function types for better type safety
  */
 export type LoggerErrorMock = MockedFunction<(message: string) => void>;
+export type LoggerUserErrorMock = MockedFunction<
+  (message: string, options?: { usage?: string; hint?: string }) => void
+>;
 
 /**
  * Creates a properly typed console.log spy
@@ -36,3 +39,9 @@ export const createConsoleErrorSpy = () => vi.spyOn(console, 'error').mockImplem
  * Creates a properly typed logger error mock
  */
 export const createLoggerErrorMock = () => vi.fn<[string], void>();
+
+/**
+ * Creates a properly typed logger userError mock
+ */
+export const createLoggerUserErrorMock = () =>
+  vi.fn<[string, { usage?: string; hint?: string }?], void>();

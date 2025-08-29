@@ -19,7 +19,7 @@ describe('CLI Messages', () => {
     it('should have INVALID_OPTION_HELP with help guidance', () => {
       expect(CLI_MESSAGES.INVALID_OPTION_HELP).toBeDefined();
       expect(CLI_MESSAGES.INVALID_OPTION_HELP).toContain('envui --help');
-      expect(CLI_MESSAGES.INVALID_OPTION_HELP).toContain('available options');
+      expect(CLI_MESSAGES.INVALID_OPTION_HELP).toContain('more information');
     });
   });
 });

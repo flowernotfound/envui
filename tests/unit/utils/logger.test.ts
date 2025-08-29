@@ -55,6 +55,50 @@ describe('logger', () => {
     });
   });
 
+  describe('userError', () => {
+    it('should output error message with Error: prefix', () => {
+      logger.userError('test error');
+
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error: test error');
+    });
+
+    it('should output error message with usage details', () => {
+      logger.userError('test error', { usage: 'usage details' });
+
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(3);
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(1, 'Error: test error');
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(2, 'Usage:');
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(3, 'usage details');
+    });
+
+    it('should output error message with hint', () => {
+      logger.userError('test error', { hint: 'helpful hint' });
+
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(2);
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(1, 'Error: test error');
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(2, 'helpful hint');
+    });
+
+    it('should prioritize usage over hint when both are provided', () => {
+      logger.userError('test error', { usage: 'usage details', hint: 'helpful hint' });
+
+      expect(consoleErrorSpy).toHaveBeenCalledTimes(3);
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(1, 'Error: test error');
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(2, 'Usage:');
+      expect(consoleErrorSpy).toHaveBeenNthCalledWith(3, 'usage details');
+    });
+  });
+
+  describe('userInfo', () => {
+    it('should output info message without prefix', () => {
+      logger.userInfo('test info');
+
+      expect(consoleLogSpy).toHaveBeenCalledTimes(1);
+      expect(consoleLogSpy).toHaveBeenCalledWith('test info');
+    });
+  });
+
   describe('all log levels', () => {
     it('should handle empty strings', () => {
       logger.debug('');

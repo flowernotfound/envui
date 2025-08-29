@@ -15,6 +15,10 @@ export type FilterConfig =
       readonly value: string;
     }
   | {
+      readonly type: 'partial';
+      readonly value: string;
+    }
+  | {
       readonly type: 'none';
     };
 

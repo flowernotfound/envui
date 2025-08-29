@@ -7,6 +7,9 @@ export enum CliErrorType {
   HELP_REQUESTED = 'help_requested',
   VERSION_REQUESTED = 'version_requested',
   SYSTEM_ERROR = 'system_error',
+  FILTER_CONFLICT = 'filter_conflict',
+  NO_DATA_FOUND = 'no_data_found',
+  SUCCESS_EXIT = 'success_exit',
 }
 
 /**

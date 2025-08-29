@@ -55,12 +55,22 @@ export function parseArgs(args: readonly string[], config: CliConfig): ParseResu
   const flags = new Set<string>();
   const parsedArguments: string[] = [];
   let command: ParsedArgs['command'] = 'main';
+  let filterValue: string | undefined;
 
   // Check help flag with priority
   let hasHelp = false;
   let hasVersion = false;
+  let skipNext = false;
 
-  for (const token of tokens) {
+  for (let i = 0; i < tokens.length; i++) {
+    if (skipNext) {
+      skipNext = false;
+      continue;
+    }
+
+    const token = tokens[i];
+    if (!token) continue;
+
     if (token.type === 'option') {
       const normalizedOption = OPTION_ALIASES[token.value] ?? token.value;
 
@@ -68,6 +78,35 @@ export function parseArgs(args: readonly string[], config: CliConfig): ParseResu
         hasHelp = true;
       } else if (normalizedOption === 'version') {
         hasVersion = true;
+      } else if (normalizedOption === 'filter') {
+        // Handle --filter option with value
+        const nextToken = tokens[i + 1];
+        if (!nextToken || nextToken.type !== 'argument') {
+          return {
+            success: false,
+            error: {
+              type: 'filter_requires_value',
+              message: '--filter option requires a search text',
+              code: 1,
+            },
+          };
+        }
+
+        // Check if the value is empty or whitespace only
+        const value = nextToken.value.trim();
+        if (value === '') {
+          return {
+            success: false,
+            error: {
+              type: 'filter_requires_value',
+              message: '--filter option requires a search text',
+              code: 1,
+            },
+          };
+        }
+
+        filterValue = value;
+        skipNext = true;
       }
 
       options.push(normalizedOption);
@@ -92,6 +131,7 @@ export function parseArgs(args: readonly string[], config: CliConfig): ParseResu
       flags,
       arguments: parsedArguments,
       errors: [],
+      filterValue,
     },
   };
 }

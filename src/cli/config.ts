@@ -11,7 +11,7 @@ export function createCliConfig(): CliConfig {
     version: pkg.version,
     description: 'Beautiful environment variable viewer',
     helpText: formatHelpText(),
-    supportedOptions: ['help', 'version'],
+    supportedOptions: ['help', 'version', 'filter'],
   };
 }
 
@@ -28,8 +28,9 @@ function formatHelpText(): string {
     '  envui [options]',
     '',
     'Options:',
-    '  -h, --help     display help for command',
-    '  -v, --version  display version number',
+    '  -h, --help         display help for command',
+    '  -v, --version      display version number',
+    '  --filter TEXT      filter variables containing TEXT (case-insensitive)',
     '',
     CLI_MESSAGES.HELP_EXAMPLES,
     CLI_MESSAGES.HELP_DESCRIPTION,

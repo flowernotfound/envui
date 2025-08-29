@@ -29,12 +29,13 @@ describe('CLI Config', () => {
       expect(config.helpText).toContain('Beautiful environment variable viewer');
       expect(config.helpText).toContain('--help');
       expect(config.helpText).toContain('--version');
+      expect(config.helpText).toContain('--filter');
     });
 
     it('should define supported options', () => {
       const config = createCliConfig();
 
-      expect(config.supportedOptions).toEqual(['help', 'version']);
+      expect(config.supportedOptions).toEqual(['help', 'version', 'filter']);
     });
   });
 

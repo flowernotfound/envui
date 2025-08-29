@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   createConsoleErrorSpy,
   createLoggerErrorMock,
+  createLoggerUserErrorMock,
   type ConsoleErrorSpy,
   type LoggerErrorMock,
+  type LoggerUserErrorMock,
 } from '../../utils/testHelpers.js';
 import {
   createCliError,
@@ -17,13 +19,18 @@ import {
 describe('CLI Errors', () => {
   let consoleErrorSpy: ConsoleErrorSpy;
   let loggerErrorMock: LoggerErrorMock;
+  let loggerUserErrorMock: LoggerUserErrorMock;
 
   beforeEach(() => {
     consoleErrorSpy = createConsoleErrorSpy();
     loggerErrorMock = createLoggerErrorMock();
+    loggerUserErrorMock = createLoggerUserErrorMock();
 
     vi.doMock('../../../src/utils/logger.js', () => ({
-      logger: { error: loggerErrorMock },
+      logger: {
+        error: loggerErrorMock,
+        userError: loggerUserErrorMock,
+      },
     }));
   });
 
@@ -73,7 +80,7 @@ describe('CLI Errors', () => {
       const error = createUnknownOptionError('--invalid');
 
       expect(error.type).toBe(CliErrorType.UNKNOWN_OPTION);
-      expect(error.message).toBe("error: unknown option '--invalid'");
+      expect(error.message).toBe("unknown option '--invalid'");
       expect(error.exitCode).toBe(2);
     });
   });
@@ -91,26 +98,40 @@ describe('CLI Errors', () => {
   describe('handleCliError', () => {
     it('should handle unknown option error', async () => {
       const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
-      const error = createCliError(CliErrorType.UNKNOWN_OPTION, 'Unknown option', 2);
+      const error = createCliError(CliErrorType.UNKNOWN_OPTION, "unknown option '--invalid'", 2);
 
       handleCliError(error);
 
-      expect(loggerErrorMock).toHaveBeenCalledWith('Unknown option');
-      expect(loggerErrorMock).toHaveBeenCalledWith(
-        "\nUse 'envui --help' to see available options.",
-      );
+      expect(loggerUserErrorMock).toHaveBeenCalledWith("unknown option '--invalid'", {
+        hint: "Try 'envui --help' for more information.",
+      });
     });
 
-    it('should handle invalid argument error', async () => {
+    it('should handle invalid argument error (non-filter)', async () => {
       const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
       const error = createCliError(CliErrorType.INVALID_ARGUMENT, 'Invalid argument', 2);
 
       handleCliError(error);
 
-      expect(loggerErrorMock).toHaveBeenCalledWith('Invalid argument');
-      expect(loggerErrorMock).toHaveBeenCalledWith(
-        "\nUse 'envui --help' to see available options.",
+      expect(loggerUserErrorMock).toHaveBeenCalledWith('Invalid argument', {
+        hint: "Try 'envui --help' for more information.",
+      });
+    });
+
+    it('should handle invalid argument error (--filter)', async () => {
+      const { handleCliError } = await import('../../../src/cli/errors/handlers.js');
+      const error = createCliError(
+        CliErrorType.INVALID_ARGUMENT,
+        '--filter option requires a search text',
+        2,
       );
+
+      handleCliError(error);
+
+      expect(loggerUserErrorMock).toHaveBeenCalledWith('--filter option requires a search text', {
+        usage:
+          '  envui [PREFIX]        # Filter by prefix\n  envui --filter TEXT   # Filter by partial match',
+      });
     });
 
     it('should handle system error', async () => {
@@ -119,8 +140,7 @@ describe('CLI Errors', () => {
 
       handleCliError(error);
 
-      // Since logger is mocked, we can't easily test it here
-      // The test would need to be structured differently
+      expect(loggerUserErrorMock).toHaveBeenCalledWith('System error');
     });
 
     it('should handle help requested (no output)', async () => {
@@ -155,8 +175,8 @@ describe('CLI Errors', () => {
 
       handleCliError(unknownError);
 
-      // The default case should call logger.error with generic message
-      expect(loggerErrorMock).toHaveBeenCalledWith('An unexpected error occurred');
+      // The default case should call logger.userError with generic message
+      expect(loggerUserErrorMock).toHaveBeenCalledWith('An unexpected error occurred');
     });
   });
 });
