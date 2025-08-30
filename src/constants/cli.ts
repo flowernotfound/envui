@@ -5,6 +5,7 @@ export const OPTION_ALIASES: Record<string, string> = {
   h: 'help',
   v: 'version',
   V: 'version',
+  f: 'filter',
 };
 
 /**
@@ -18,7 +19,7 @@ export const EXIT_CODES = {
   SUCCESS: 0,
   SYSTEM_ERROR: 1,
   DATA_NOT_FOUND: 2,
-  INVALID_ARGUMENT: 2, // UNIX convention: invalid argument uses exit code 2
+  INVALID_ARGUMENT: 2,
 } as const;
 
 export type ExitCode = (typeof EXIT_CODES)[keyof typeof EXIT_CODES];

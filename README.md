@@ -27,7 +27,9 @@ pnpm build
 
 # Filter by partial match (case-insensitive)
 ./dist/cli.js --filter API
+./dist/cli.js -f API
 ./dist/cli.js --filter database
+./dist/cli.js -f database
 
 # Display help
 ./dist/cli.js --help
