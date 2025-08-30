@@ -241,6 +241,37 @@ describe('CLI Parser', () => {
         expect(result.data.arguments).toEqual(['PREFIX']);
       }
     });
+
+    it('should parse -f option with value', () => {
+      const result = parseArgs(['node', 'cli.js', '-f', 'API'], mockConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.command).toBe('main');
+        expect(result.data.flags.has('filter')).toBe(true);
+        expect(result.data.filterValue).toBe('API');
+        expect(result.data.arguments).toEqual([]);
+      }
+    });
+
+    it('should handle -f without value', () => {
+      const result = parseArgs(['node', 'cli.js', '-f'], mockConfig);
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error.type).toBe('filter_requires_value');
+        expect(result.error.message).toBe('--filter option requires a search text');
+      }
+    });
+
+    it('should trim whitespace from -f value', () => {
+      const result = parseArgs(['node', 'cli.js', '-f', '  API  '], mockConfig);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.filterValue).toBe('API');
+      }
+    });
   });
 
   describe('isValidOption', () => {
