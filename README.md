@@ -9,7 +9,7 @@ envui is a CLI tool that displays environment variables in a clean, readable tab
 ## Installation
 
 ```bash
-npm install -g envui
+npm install -g @flowernotfound/envui
 ```
 
 ## Usage
