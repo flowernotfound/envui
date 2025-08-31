@@ -2,29 +2,43 @@ import type { EnvironmentData, FilterConfig, FilterResult } from '../types/envir
 import { ERROR_MESSAGES, CLI_MESSAGES } from '../constants/index.js';
 
 /**
+ * Creates a filter function that matches environment variables by type and search text
+ * @param type - The type of filter ('prefix' or 'partial')
+ * @param searchText - The text to match (case-insensitive)
+ * @returns A filter function that checks if a variable matches the criteria
+ */
+export function createFilter(
+  type: 'prefix' | 'partial',
+  searchText: string,
+): (env: EnvironmentData) => boolean {
+  const lowerSearchText = searchText.toLowerCase();
+
+  return (env: EnvironmentData): boolean => {
+    const lowerKey = env.key.toLowerCase();
+    return type === 'prefix'
+      ? lowerKey.startsWith(lowerSearchText)
+      : lowerKey.includes(lowerSearchText);
+  };
+}
+
+/**
  * Creates a filter function that matches environment variables by prefix
  * @param prefix - The prefix to match (case-insensitive)
  * @returns A filter function that checks if a variable starts with the prefix
+ * @deprecated Use createFilter('prefix', prefix) instead
  */
 export function createPrefixFilter(prefix: string): (env: EnvironmentData) => boolean {
-  const lowerPrefix = prefix.toLowerCase();
-
-  return (env: EnvironmentData): boolean => {
-    return env.key.toLowerCase().startsWith(lowerPrefix);
-  };
+  return createFilter('prefix', prefix);
 }
 
 /**
  * Creates a filter function that matches environment variables by partial match
  * @param searchText - The text to search for (case-insensitive)
  * @returns A filter function that checks if a variable contains the search text
+ * @deprecated Use createFilter('partial', searchText) instead
  */
 export function createPartialMatchFilter(searchText: string): (env: EnvironmentData) => boolean {
-  const lowerSearchText = searchText.toLowerCase();
-
-  return (env: EnvironmentData): boolean => {
-    return env.key.toLowerCase().includes(lowerSearchText);
-  };
+  return createFilter('partial', searchText);
 }
 
 /**
@@ -50,14 +64,7 @@ export function filterEnvironmentVariables(
   }
 
   // Apply appropriate filter based on type
-  let filter: (env: EnvironmentData) => boolean;
-
-  if (config.type === 'prefix') {
-    filter = createPrefixFilter(config.value);
-  } else {
-    // config.type === 'partial'
-    filter = createPartialMatchFilter(config.value);
-  }
+  const filter = createFilter(config.type, config.value);
 
   const filtered = data.filter(filter);
 

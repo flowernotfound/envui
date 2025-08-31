@@ -30,7 +30,7 @@ function formatHelpText(): string {
     'Options:',
     '  -h, --help         display help for command',
     '  -v, --version      display version number',
-    '  --filter TEXT      filter variables containing TEXT (case-insensitive)',
+    '  -f, --filter TEXT  filter variables containing TEXT (case-insensitive)',
     '',
     CLI_MESSAGES.HELP_EXAMPLES,
     CLI_MESSAGES.HELP_DESCRIPTION,
