@@ -9,33 +9,30 @@ envui is a CLI tool that displays environment variables in a clean, readable tab
 ## Installation
 
 ```bash
-git clone https://github.com/flowernotfound/envui.git
-cd envui
-pnpm install
-pnpm build
+npm install -g envui
 ```
 
 ## Usage
 
 ```bash
 # Display all environment variables
-./dist/cli.js
+envui
 
 # Prefix filtering (case-insensitive)
-./dist/cli.js VITE_
-./dist/cli.js NODE_
+envui VITE_
+envui NODE_
 
 # Filter by partial match (case-insensitive)
-./dist/cli.js --filter API
-./dist/cli.js -f API
-./dist/cli.js --filter database
-./dist/cli.js -f database
+envui --filter API
+envui -f API
+envui --filter database
+envui -f database
 
 # Display help
-./dist/cli.js --help
+envui --help
 
 # Show version
-./dist/cli.js --version
+envui --version
 ```
 
 ## Development
